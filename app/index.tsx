@@ -24,19 +24,19 @@ export default function Splash() {
       Animated.parallel([
         Animated.timing(spin, {
           toValue: 1,
-          duration: 1300,
+          duration: 750,
           easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }),
         Animated.timing(scale, {
           toValue: 1,
-          duration: 1300,
+          duration: 750,
           easing: Easing.out(Easing.back(1.4)),
           useNativeDriver: true,
         }),
         Animated.timing(markFade, {
           toValue: 1,
-          duration: 450,
+          duration: 280,
           easing: Easing.out(Easing.quad),
           useNativeDriver: true,
         }),
@@ -45,12 +45,12 @@ export default function Splash() {
       Animated.parallel([
         Animated.timing(wordFade, {
           toValue: 1,
-          duration: 420,
+          duration: 260,
           useNativeDriver: true,
         }),
         Animated.timing(wordShift, {
           toValue: 0,
-          duration: 420,
+          duration: 260,
           easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }),
@@ -58,11 +58,11 @@ export default function Splash() {
       // 3) Tagline fades in
       Animated.timing(taglineFade, {
         toValue: 1,
-        duration: 420,
+        duration: 240,
         useNativeDriver: true,
       }),
       // 4) Hold a beat before leaving
-      Animated.delay(450),
+      Animated.delay(250),
     ]).start(({ finished }) => {
       if (finished) router.replace(signedIn ? '/(tabs)' : '/login');
     });
