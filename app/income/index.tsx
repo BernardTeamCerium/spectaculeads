@@ -53,7 +53,7 @@ export default function IncomeWelcome() {
       </View>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.lg }]}>
-        <Button label="Let’s begin" variant="teal" onPress={() => router.push('/income/steps')} />
+        <Button label="Start My Plan" variant="teal" onPress={() => router.push('/income/steps')} />
       </View>
     </View>
   );

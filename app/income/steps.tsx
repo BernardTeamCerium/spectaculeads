@@ -7,51 +7,58 @@ import { Button } from '../../src/components/Button';
 import { Slider } from '../../src/components/Slider';
 import { useApp } from '../../src/state/AppState';
 import { colors, fonts, radii, spacing } from '../../src/theme';
-import { money } from '../../src/utils/format';
 
 interface SliderDef {
-  key: 'netIncomeGoal' | 'avgSale' | 'avgCommissionPct' | 'closeRatePct';
+  key: 'netIncomeGoal' | 'avgSale' | 'avgCommission';
   label: string;
   min: number;
   max: number;
   step: number;
-  format: (v: number) => string;
 }
 
 interface StepDef {
   eyebrow: string;
   title: string;
   hint: string;
-  sliders: SliderDef[];
+  slider: SliderDef;
 }
 
-const pct = (v: number) => `${v}%`;
+/** Compact money label, e.g. 250000 -> "$250k", 1000000 -> "$1M". */
+function shortMoney(v: number): string {
+  if (v >= 1_000_000) {
+    const m = v / 1_000_000;
+    return `$${Number.isInteger(m) ? m : (Math.round(m * 10) / 10).toString()}M`;
+  }
+  if (v >= 1000) {
+    const k = v / 1000;
+    return `$${Number.isInteger(k) ? k : (Math.round(k * 10) / 10).toString()}k`;
+  }
+  return `$${v}`;
+}
+
+/** Adds a trailing "+" once a slider is maxed out (e.g. "$1M+"). */
+function label(v: number, max: number): string {
+  return shortMoney(v) + (v >= max ? '+' : '');
+}
 
 const STEPS: StepDef[] = [
   {
     eyebrow: 'Step 1 of 3',
-    title: 'What net income do you want this year?',
-    hint: 'Your take-home goal after splits and expenses.',
-    sliders: [
-      { key: 'netIncomeGoal', label: 'Net income goal', min: 40000, max: 500000, step: 5000, format: (v) => money(v) },
-    ],
+    title: 'What NET income do you want this year?',
+    hint: 'Your desired take-home income, after splits and expenses.',
+    slider: { key: 'netIncomeGoal', label: 'Net income goal', min: 50_000, max: 1_000_000, step: 10_000 },
   },
   {
     eyebrow: 'Step 2 of 3',
-    title: 'What’s your average sale?',
-    hint: 'The typical premium or policy value you write.',
-    sliders: [
-      { key: 'avgSale', label: 'Average sale value', min: 500, max: 15000, step: 100, format: (v) => money(v) },
-    ],
+    title: 'What’s your average sale amount?',
+    hint: 'The typical premium or policy size you write.',
+    slider: { key: 'avgSale', label: 'Average sale', min: 1_000, max: 100_000, step: 1_000 },
   },
   {
     eyebrow: 'Step 3 of 3',
-    title: 'Your commission & close rate',
-    hint: 'How much you keep, and how often leads turn into deals.',
-    sliders: [
-      { key: 'avgCommissionPct', label: 'Average commission', min: 20, max: 120, step: 5, format: pct },
-      { key: 'closeRatePct', label: 'Typical close rate', min: 5, max: 80, step: 5, format: pct },
-    ],
+    title: 'What’s your average commission per sale?',
+    hint: 'What you personally earn on a typical deal.',
+    slider: { key: 'avgCommission', label: 'Average commission', min: 100, max: 20_000, step: 100 },
   },
 ];
 
@@ -96,33 +103,32 @@ export default function IncomeSteps() {
         <Text style={styles.title}>{step.title}</Text>
         <Text style={styles.hint}>{step.hint}</Text>
 
-        <View style={{ marginTop: spacing.xxl, gap: spacing.xl }}>
-          {step.sliders.map((s) => (
-            <View key={s.key}>
-              <View style={styles.sliderHead}>
-                <Text style={styles.sliderLabel}>{s.label}</Text>
-                <Text style={styles.sliderValue}>{s.format(planInputs[s.key])}</Text>
-              </View>
-              <Slider
-                value={planInputs[s.key]}
-                min={s.min}
-                max={s.max}
-                step={s.step}
-                onChange={(v) => setPlanInputs({ [s.key]: v })}
-              />
-              <View style={styles.rangeRow}>
-                <Text style={styles.rangeText}>{s.format(s.min)}</Text>
-                <Text style={styles.rangeText}>{s.format(s.max)}</Text>
-              </View>
-            </View>
-          ))}
+        <View style={{ marginTop: spacing.xxl }}>
+          <View style={styles.sliderHead}>
+            <Text style={styles.sliderLabel}>{step.slider.label}</Text>
+            <Text style={styles.sliderValue}>
+              {label(planInputs[step.slider.key], step.slider.max)}
+            </Text>
+          </View>
+          <Slider
+            value={planInputs[step.slider.key]}
+            min={step.slider.min}
+            max={step.slider.max}
+            step={step.slider.step}
+            onChange={(v) => setPlanInputs({ [step.slider.key]: v })}
+          />
+          <View style={styles.rangeRow}>
+            <Text style={styles.rangeText}>{label(step.slider.min, step.slider.max)}</Text>
+            <Text style={styles.rangeText}>{label(step.slider.max, step.slider.max)}</Text>
+          </View>
         </View>
 
         {/* Live preview */}
         <View style={styles.preview}>
           <Ionicons name="sparkles-outline" size={16} color={colors.teal} />
           <Text style={styles.previewText}>
-            So far: ~<Text style={styles.previewStrong}>{planResults.dealsNeeded} deals</Text> from{' '}
+            So far: <Text style={styles.previewStrong}>{planResults.dealsNeeded} deals</Text> ·{' '}
+            <Text style={styles.previewStrong}>{planResults.appointmentsNeeded} appts</Text> ·{' '}
             <Text style={styles.previewStrong}>{planResults.leadsNeeded} leads</Text>
           </Text>
         </View>

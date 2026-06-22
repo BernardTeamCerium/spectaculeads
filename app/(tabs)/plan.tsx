@@ -22,6 +22,7 @@ export default function Plan() {
   const d = DIVISOR[period];
   const income = Math.round(planResults.projectedIncome / d);
   const deals = Math.ceil(planResults.dealsNeeded / d);
+  const appointments = Math.ceil(planResults.appointmentsNeeded / d);
   const leads = Math.ceil(planResults.leadsNeeded / d);
   const periodLabel = period === 'Yearly' ? 'year' : period === 'Quarterly' ? 'quarter' : 'month';
 
@@ -79,13 +80,13 @@ export default function Plan() {
             </View>
             <View style={styles.headlineDivider} />
             <View style={styles.headlineStat}>
-              <Text style={styles.hsValue}>{leads}</Text>
-              <Text style={styles.hsLabel}>leads</Text>
+              <Text style={styles.hsValue}>{appointments}</Text>
+              <Text style={styles.hsLabel}>appts</Text>
             </View>
             <View style={styles.headlineDivider} />
             <View style={styles.headlineStat}>
-              <Text style={styles.hsValue}>{money(planResults.commissionPerDeal)}</Text>
-              <Text style={styles.hsLabel}>per deal</Text>
+              <Text style={styles.hsValue}>{leads}</Text>
+              <Text style={styles.hsLabel}>leads</Text>
             </View>
           </View>
         </View>
@@ -96,11 +97,13 @@ export default function Plan() {
           <Divider />
           <Row label="Deals to close" value={`${deals}`} />
           <Divider />
+          <Row label="Appointments to set" value={`${appointments}`} />
+          <Divider />
           <Row label="Leads to work" value={`${leads}`} />
           <Divider />
-          <Row label="Close rate" value={`${planInputs.closeRatePct}%`} />
+          <Row label="Show rate / close rate" value="33% / 33%" />
           <Divider />
-          <Row label="Avg commission / deal" value={money(planResults.commissionPerDeal)} />
+          <Row label="Avg commission / deal" value={money(planInputs.avgCommission)} />
         </Card>
 
         <View style={styles.tipCard}>

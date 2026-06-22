@@ -4,6 +4,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../../src/components/Button';
 import { CREDIT_PACKAGES } from '../../src/data/mock';
+import { leadsPerMonth, recommendPackage } from '../../src/lib/incomePlan';
 import { useApp } from '../../src/state/AppState';
 import { colors, fonts, radii, spacing } from '../../src/theme';
 import { money } from '../../src/utils/format';
@@ -11,15 +12,11 @@ import { money } from '../../src/utils/format';
 export default function IncomeResults() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { planResults } = useApp();
+  const { planResults, planInputs } = useApp();
 
-  const monthlyLeads = planResults.leadsNeeded / 12;
-  const recommended =
-    monthlyLeads >= 15
-      ? CREDIT_PACKAGES.find((p) => p.id === 'pro')!
-      : monthlyLeads >= 8
-        ? CREDIT_PACKAGES.find((p) => p.id === 'plus')!
-        : CREDIT_PACKAGES.find((p) => p.id === 'starter')!;
+  const monthlyLeads = leadsPerMonth(planResults.leadsNeeded);
+  const recommended = recommendPackage(planResults.leadsNeeded, CREDIT_PACKAGES);
+  const monthsCovered = Math.round((recommended.credits / Math.max(1, monthlyLeads)) * 10) / 10;
 
   return (
     <View style={styles.screen}>
@@ -40,27 +37,32 @@ export default function IncomeResults() {
         <View style={styles.hero}>
           <Text style={styles.heroLabel}>Projected annual income</Text>
           <Text style={styles.heroValue}>{money(planResults.projectedIncome)}</Text>
-          <Text style={styles.heroSub}>at {money(planResults.commissionPerDeal)} avg commission per deal</Text>
+          <Text style={styles.heroSub}>at {money(planInputs.avgCommission)} avg commission per deal</Text>
         </View>
 
-        {/* Two key metrics */}
+        {/* Funnel: deals -> appointments -> leads */}
         <View style={styles.metricRow}>
           <View style={styles.metric}>
-            <Ionicons name="briefcase-outline" size={22} color={colors.teal} />
+            <Ionicons name="briefcase-outline" size={20} color={colors.teal} />
             <Text style={styles.metricValue}>{planResults.dealsNeeded}</Text>
-            <Text style={styles.metricLabel}>deals to close</Text>
+            <Text style={styles.metricLabel}>deals</Text>
           </View>
           <View style={styles.metric}>
-            <Ionicons name="people-outline" size={22} color={colors.teal} />
+            <Ionicons name="calendar-outline" size={20} color={colors.teal} />
+            <Text style={styles.metricValue}>{planResults.appointmentsNeeded}</Text>
+            <Text style={styles.metricLabel}>appointments</Text>
+          </View>
+          <View style={styles.metric}>
+            <Ionicons name="people-outline" size={20} color={colors.teal} />
             <Text style={styles.metricValue}>{planResults.leadsNeeded}</Text>
-            <Text style={styles.metricLabel}>leads to work</Text>
+            <Text style={styles.metricLabel}>leads</Text>
           </View>
         </View>
 
         <Text style={styles.cadence}>
-          That’s about{' '}
-          <Text style={styles.cadenceStrong}>{Math.ceil(planResults.leadsNeeded / 12)} leads per month</Text>{' '}
-          to stay on track.
+          Assuming a <Text style={styles.cadenceStrong}>33% show rate</Text> and{' '}
+          <Text style={styles.cadenceStrong}>33% close rate</Text> — about{' '}
+          <Text style={styles.cadenceStrong}>{monthlyLeads} leads per month</Text>.
         </Text>
 
         {/* Recommended package */}
@@ -74,8 +76,8 @@ export default function IncomeResults() {
             <Text style={styles.recPrice}>{money(recommended.price, { cents: true })}</Text>
           </View>
           <Text style={styles.recReason}>
-            Covers roughly {Math.round((recommended.credits / Math.max(1, monthlyLeads)) * 10) / 10} months
-            of leads at your target pace.
+            Sized to your target of {monthlyLeads} leads/month — about {monthsCovered}{' '}
+            {monthsCovered === 1 ? 'month' : 'months'} of leads per pack.
           </Text>
           <Button
             label={`Buy ${recommended.name} pack`}

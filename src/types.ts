@@ -55,15 +55,15 @@ export interface CreditPackage {
 }
 
 export interface PlanInputs {
-  netIncomeGoal: number; // desired yearly net income
-  avgSale: number; // avg sale value
-  avgCommissionPct: number; // commission %
-  closeRatePct: number; // leads -> deal conversion
+  netIncomeGoal: number; // desired NET yearly income ($)
+  avgSale: number; // average sale amount ($)
+  avgCommission: number; // average commission per sale ($)
 }
 
 export interface PlanResults {
-  projectedIncome: number;
+  projectedIncome: number; // income from hitting dealsNeeded
   dealsNeeded: number;
+  appointmentsNeeded: number;
   leadsNeeded: number;
-  commissionPerDeal: number;
+  salesVolume: number; // dealsNeeded * avgSale (context only)
 }

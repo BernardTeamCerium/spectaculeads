@@ -1,8 +1,10 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { DEMO_ADVISOR, SAMPLE_LEADS } from '../data/mock';
+import { computePlan, DEFAULT_PLAN_INPUTS } from '../lib/incomePlan';
 import { Lead, LeadStatus, LicenseStatus, PlanInputs, PlanResults } from '../types';
 
 export type { LicenseStatus } from '../types';
+export { computePlan } from '../lib/incomePlan';
 
 interface UserProfile {
   name: string;
@@ -53,25 +55,6 @@ interface AppStateShape {
   verifyLicense: () => void;
 }
 
-const DEFAULT_INPUTS: PlanInputs = {
-  netIncomeGoal: 120000,
-  avgSale: 2500,
-  avgCommissionPct: 80,
-  closeRatePct: 25,
-};
-
-/** Pure calc so screens and tests can reuse it. */
-export function computePlan(inputs: PlanInputs): PlanResults {
-  const commissionPerDeal = Math.max(
-    1,
-    (inputs.avgSale * inputs.avgCommissionPct) / 100
-  );
-  const dealsNeeded = Math.ceil(inputs.netIncomeGoal / commissionPerDeal);
-  const closeRate = Math.max(1, inputs.closeRatePct) / 100;
-  const leadsNeeded = Math.ceil(dealsNeeded / closeRate);
-  const projectedIncome = dealsNeeded * commissionPerDeal;
-  return { projectedIncome, dealsNeeded, leadsNeeded, commissionPerDeal };
-}
 
 const AppStateContext = createContext<AppStateShape | null>(null);
 
@@ -79,7 +62,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [signedIn, setSignedIn] = useState(false);
   const [credits, setCredits] = useState(DEMO_ADVISOR.credits);
   const [leads, setLeads] = useState<Lead[]>(SAMPLE_LEADS);
-  const [planInputs, setPlanInputsState] = useState<PlanInputs>(DEFAULT_INPUTS);
+  const [planInputs, setPlanInputsState] = useState<PlanInputs>(DEFAULT_PLAN_INPUTS);
   const [planComplete, setPlanComplete] = useState(false);
   const [licenseStatus, setLicenseStatus] = useState<LicenseStatus>(DEMO_ADVISOR.license.status);
   const [user, setUser] = useState<UserProfile>({
