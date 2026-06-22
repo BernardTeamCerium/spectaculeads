@@ -4,10 +4,11 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Card, Eyebrow, H1, StatusBadge } from '../../src/components/ui';
+import { fullName, initials } from '../../src/data/mock';
 import { useApp } from '../../src/state/AppState';
 import { LeadStatus } from '../../src/types';
 import { colors, fonts, radii, spacing } from '../../src/theme';
-import { money, timeAgo } from '../../src/utils/format';
+import { timeAgo } from '../../src/utils/format';
 
 type Filter = 'All' | LeadStatus;
 const FILTERS: Filter[] = ['All', 'Available', 'Contacted', 'Delivered', 'Appointment Set'];
@@ -70,23 +71,21 @@ export default function Leads() {
             <Card style={styles.leadCard}>
               <View style={styles.cardTop}>
                 <View style={styles.avatar}>
-                  <Text style={styles.avatarText}>
-                    {lead.name.split(' ').map((n) => n[0]).join('')}
-                  </Text>
+                  <Text style={styles.avatarText}>{initials(lead)}</Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.leadName}>{lead.name}</Text>
+                  <Text style={styles.leadName}>{fullName(lead)}</Text>
                   <Text style={styles.leadMeta}>
-                    {lead.city}, {lead.state} · {lead.age}
+                    {lead.vertical} · {lead.state}
                   </Text>
                 </View>
-                <Text style={styles.time}>{timeAgo(lead.receivedAt)}</Text>
+                <Text style={styles.time}>{timeAgo(lead.date)}</Text>
               </View>
 
               <View style={styles.cardBottom}>
                 <View>
-                  <Text style={styles.product}>{lead.product}</Text>
-                  <Text style={styles.value}>{money(lead.estimatedValue)} est. value</Text>
+                  <Text style={styles.product}>{lead.assets}</Text>
+                  <Text style={styles.value}>{lead.phone}</Text>
                 </View>
                 <StatusBadge status={lead.status} />
               </View>

@@ -1,14 +1,24 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
-import { MOCK_LEADS } from '../data/leads';
-import { Lead, LeadStatus, PlanInputs, PlanResults } from '../types';
+import { DEMO_ADVISOR, SAMPLE_LEADS } from '../data/mock';
+import { Lead, LeadStatus, LicenseStatus, PlanInputs, PlanResults } from '../types';
 
-export type LicenseStatus = 'none' | 'pending' | 'verified';
+export type { LicenseStatus } from '../types';
 
 interface UserProfile {
   name: string;
   email: string;
   company: string;
   licenseState: string;
+}
+
+/** Derive a friendly company name from the advisor's email domain. */
+function companyFromEmail(email: string): string {
+  const domain = email.split('@')[1] ?? '';
+  const base = domain.split('.')[0] ?? '';
+  if (!base) return 'Independent Advisor';
+  return base
+    .replace(/[-_]/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 interface AppStateShape {
@@ -67,16 +77,16 @@ const AppStateContext = createContext<AppStateShape | null>(null);
 
 export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [signedIn, setSignedIn] = useState(false);
-  const [credits, setCredits] = useState(8);
-  const [leads, setLeads] = useState<Lead[]>(MOCK_LEADS);
+  const [credits, setCredits] = useState(DEMO_ADVISOR.credits);
+  const [leads, setLeads] = useState<Lead[]>(SAMPLE_LEADS);
   const [planInputs, setPlanInputsState] = useState<PlanInputs>(DEFAULT_INPUTS);
   const [planComplete, setPlanComplete] = useState(false);
-  const [licenseStatus, setLicenseStatus] = useState<LicenseStatus>('none');
+  const [licenseStatus, setLicenseStatus] = useState<LicenseStatus>(DEMO_ADVISOR.license.status);
   const [user, setUser] = useState<UserProfile>({
-    name: 'Alex Rivera',
-    email: 'alex.rivera@example.com',
-    company: 'Rivera Financial Group',
-    licenseState: 'TX',
+    name: DEMO_ADVISOR.name,
+    email: DEMO_ADVISOR.email,
+    company: companyFromEmail(DEMO_ADVISOR.email),
+    licenseState: DEMO_ADVISOR.license.state,
   });
 
   const signIn = useCallback((email?: string) => {

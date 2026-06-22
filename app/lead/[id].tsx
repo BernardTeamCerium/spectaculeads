@@ -13,10 +13,11 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Card, StatusBadge } from '../../src/components/ui';
+import { fullName, initials } from '../../src/data/mock';
 import { useApp } from '../../src/state/AppState';
 import { LEAD_STATUS_ORDER, LeadStatus } from '../../src/types';
 import { colors, fonts, radii, spacing } from '../../src/theme';
-import { money } from '../../src/utils/format';
+import { timeAgo } from '../../src/utils/format';
 
 export default function LeadDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -69,13 +70,11 @@ export default function LeadDetail() {
         {/* Identity block (on navy header) */}
         <View style={styles.identity}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {lead.name.split(' ').map((n) => n[0]).join('')}
-            </Text>
+            <Text style={styles.avatarText}>{initials(lead)}</Text>
           </View>
-          <Text style={styles.name}>{lead.name}</Text>
+          <Text style={styles.name}>{fullName(lead)}</Text>
           <Text style={styles.sub}>
-            {lead.age} · {lead.city}, {lead.state}
+            {lead.vertical} · {lead.state}
           </Text>
           <View style={{ marginTop: spacing.md }}>
             <StatusBadge status={lead.status} />
@@ -94,14 +93,14 @@ export default function LeadDetail() {
           <Card style={{ marginTop: spacing.lg }}>
             <Text style={styles.cardLabel}>Opportunity</Text>
             <View style={styles.oppRow}>
-              <Text style={styles.product}>{lead.product}</Text>
-              <Text style={styles.value}>{money(lead.estimatedValue)}</Text>
+              <Text style={styles.product}>{lead.vertical}</Text>
+              <Text style={styles.value}>{lead.assets}</Text>
             </View>
-            <Text style={styles.summary}>{lead.summary}</Text>
             <View style={styles.metaGrid}>
-              <Meta label="Source" value={lead.source} />
+              <Meta label="Investable assets" value={lead.assets} />
               <Meta label="Phone" value={lead.phone} />
-              <Meta label="Email" value={lead.email} />
+              <Meta label="State" value={lead.state} />
+              <Meta label="Received" value={timeAgo(lead.date)} />
             </View>
           </Card>
 

@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../src/components/Button';
-import { CREDIT_PACKAGES } from '../src/data/packages';
+import { CREDIT_PACKAGES } from '../src/data/mock';
 import { useApp } from '../src/state/AppState';
 import { colors, fonts, radii, spacing } from '../src/theme';
 import { money } from '../src/utils/format';

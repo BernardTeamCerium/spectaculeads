@@ -7,21 +7,42 @@ export const LEAD_STATUS_ORDER: LeadStatus[] = [
   'Appointment Set',
 ];
 
+/** Insurance / financial product verticals a lead is interested in. */
+export type Vertical = 'Retirement' | 'Annuities' | 'Life' | 'Medicare' | 'IUL' | 'Final Expense';
+
+/** Investable-assets bracket for a lead. */
+export type AssetRange =
+  | 'Under $100k'
+  | '$100k–$250k'
+  | '$250k–$500k'
+  | '$500k–$1M'
+  | '$1M+';
+
 export interface Lead {
   id: string;
-  name: string;
-  age: number;
-  city: string;
-  state: string;
-  product: string; // what they're interested in
-  estimatedValue: number; // potential commission value
-  source: string;
-  receivedAt: string; // ISO date
-  status: LeadStatus;
-  notes: string;
+  firstName: string;
+  lastName: string;
+  state: string; // 2-letter code
+  vertical: Vertical;
+  assets: AssetRange;
   phone: string;
+  status: LeadStatus;
+  notes?: string;
+  date: string; // ISO date the lead was received
+}
+
+export type LicenseStatus = 'none' | 'pending' | 'verified';
+
+export interface Advisor {
+  name: string;
   email: string;
-  summary: string;
+  state: string; // 2-letter code
+  credits: number;
+  license: {
+    status: LicenseStatus;
+    state: string; // licensed state, e.g. "CA"
+    type: string; // e.g. "Life & Health"
+  };
 }
 
 export interface CreditPackage {
