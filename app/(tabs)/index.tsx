@@ -1,240 +1,219 @@
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Body, Card, Eyebrow, H1, H2, StatusBadge } from '../../src/components/ui';
-import { useApp } from '../../src/state/AppState';
+import { useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import {
+  Body,
+  Button,
+  Card,
+  Divider,
+  Eyebrow,
+  H1,
+  H2,
+  LogoMark,
+  Pill,
+  Screen,
+  SectionTitle,
+  Slider,
+  StatusBadge,
+  Wordmark,
+} from '../../src/components';
+import { LEAD_STATUS_ORDER } from '../../src/types';
 import { colors, fonts, radii, spacing } from '../../src/theme';
-import { compactMoney, money, timeAgo } from '../../src/utils/format';
 
-function greeting() {
-  const h = new Date().getHours();
-  if (h < 12) return 'Good morning';
-  if (h < 18) return 'Good afternoon';
-  return 'Good evening';
-}
+const SWATCHES: { name: string; hex: string; dark?: boolean }[] = [
+  { name: 'Navy', hex: colors.navy, dark: true },
+  { name: 'Indigo', hex: colors.indigo, dark: true },
+  { name: 'Teal', hex: colors.teal },
+  { name: 'Teal light', hex: colors.tealLight },
+  { name: 'Teal deep', hex: colors.tealDeep, dark: true },
+  { name: 'Light bg', hex: colors.lightBg },
+  { name: 'Text', hex: colors.text, dark: true },
+  { name: 'Muted', hex: colors.muted, dark: true },
+];
 
-export default function Home() {
-  const router = useRouter();
-  const insets = useSafeAreaInsets();
-  const { user, credits, leads, planComplete, planResults } = useApp();
-
-  const firstName = user.name.split(' ')[0];
-  const available = leads.filter((l) => l.status === 'Available').length;
-  const appointments = leads.filter((l) => l.status === 'Appointment Set').length;
-  const recent = leads.slice(0, 3);
+export default function StylePreview() {
+  const [slider, setSlider] = useState(60);
+  const [activePill, setActivePill] = useState('Monthly');
 
   return (
-    <View style={styles.screen}>
-      <ScrollView
-        contentContainerStyle={{
-          paddingTop: insets.top + spacing.lg,
-          paddingBottom: spacing.xxl,
-          paddingHorizontal: spacing.lg,
-        }}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.topRow}>
-          <View>
-            <Text style={styles.greeting}>{greeting()},</Text>
-            <H1>{firstName}</H1>
-          </View>
-          <View style={styles.creditsChip}>
-            <Ionicons name="flash" size={14} color={colors.teal} />
-            <Text style={styles.creditsText}>{credits} credits</Text>
-          </View>
+    <Screen>
+      {/* Header */}
+      <View style={styles.header}>
+        <LogoMark size={56} />
+        <View style={{ flex: 1 }}>
+          <Wordmark />
+          <Text style={styles.subtitle}>Design system preview</Text>
         </View>
+      </View>
 
-        {/* Income by Design hero */}
-        <Pressable onPress={() => router.push('/income')}>
-          <View style={styles.hero}>
-            <Eyebrow style={{ color: colors.tealLight }}>Income by Design</Eyebrow>
-            {planComplete ? (
-              <>
-                <Text style={styles.heroBig}>{money(planResults.projectedIncome)}</Text>
-                <Text style={styles.heroSub}>
-                  Your projected income · {planResults.leadsNeeded} leads needed
-                </Text>
-              </>
-            ) : (
-              <>
-                <Text style={styles.heroTitle}>Design your income goal</Text>
-                <Text style={styles.heroSub}>
-                  Tell us your target and we’ll map the deals & leads to get there.
-                </Text>
-              </>
-            )}
-            <View style={styles.heroBtn}>
-              <Text style={styles.heroBtnText}>
-                {planComplete ? 'View my plan' : 'Start now'}
+      {/* Logo mark sizes */}
+      <SectionTitle eyebrow="Brand" title="Logo mark" subtitle="Teal-gradient S, white L on indigo" />
+      <Card>
+        <View style={styles.logoRow}>
+          <LogoMark size={40} />
+          <LogoMark size={56} />
+          <LogoMark size={72} />
+          <LogoMark size={96} />
+        </View>
+      </Card>
+
+      {/* Colors */}
+      <SectionTitle eyebrow="Foundations" title="Colors" style={styles.section} />
+      <View style={styles.swatchGrid}>
+        {SWATCHES.map((s) => (
+          <View key={s.name} style={styles.swatch}>
+            <View style={[styles.swatchChip, { backgroundColor: s.hex }]}>
+              <Text style={[styles.swatchHex, { color: s.dark ? colors.white : colors.text }]}>
+                {s.hex}
               </Text>
-              <Ionicons name="arrow-forward" size={16} color={colors.navy} />
             </View>
+            <Text style={styles.swatchName}>{s.name}</Text>
           </View>
-        </Pressable>
-
-        {/* Stat tiles */}
-        <View style={styles.statRow}>
-          <Card style={styles.statTile}>
-            <Text style={styles.tileValue}>{available}</Text>
-            <Text style={styles.tileLabel}>New leads</Text>
-          </Card>
-          <Card style={styles.statTile}>
-            <Text style={styles.tileValue}>{appointments}</Text>
-            <Text style={styles.tileLabel}>Appointments</Text>
-          </Card>
-          <Card style={styles.statTile}>
-            <Text style={styles.tileValue}>{compactMoney(
-              leads.reduce((s, l) => s + l.estimatedValue, 0)
-            )}</Text>
-            <Text style={styles.tileLabel}>Pipeline</Text>
-          </Card>
-        </View>
-
-        {/* Recent leads */}
-        <View style={styles.sectionHead}>
-          <H2>Recent leads</H2>
-          <Pressable onPress={() => router.push('/(tabs)/leads')}>
-            <Text style={styles.link}>View all</Text>
-          </Pressable>
-        </View>
-
-        {recent.map((lead) => (
-          <Pressable key={lead.id} onPress={() => router.push(`/lead/${lead.id}`)}>
-            <Card style={styles.leadCard}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>
-                  {lead.name.split(' ').map((n) => n[0]).join('')}
-                </Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.leadName}>{lead.name}</Text>
-                <Text style={styles.leadMeta}>
-                  {lead.product} · {money(lead.estimatedValue)}
-                </Text>
-              </View>
-              <View style={{ alignItems: 'flex-end', gap: 6 }}>
-                <StatusBadge status={lead.status} />
-                <Text style={styles.time}>{timeAgo(lead.receivedAt)}</Text>
-              </View>
-            </Card>
-          </Pressable>
         ))}
+      </View>
 
-        <Pressable onPress={() => router.push('/(tabs)/buy')} style={styles.buyBanner}>
-          <Ionicons name="cart" size={20} color={colors.teal} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.buyTitle}>Running low on leads?</Text>
-            <Body muted style={{ fontSize: 13 }}>Top up your credits in seconds.</Body>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={colors.muted} />
-        </Pressable>
-      </ScrollView>
-    </View>
+      {/* Typography */}
+      <SectionTitle eyebrow="Foundations" title="Typography" style={styles.section} />
+      <Card>
+        <Eyebrow>Eyebrow · Figtree</Eyebrow>
+        <H1 style={{ marginTop: 6 }}>Heading 1 · Sora</H1>
+        <H2 style={{ marginTop: 8 }}>Heading 2 · Sora</H2>
+        <Body style={{ marginTop: 8 }}>
+          Body copy is set in Figtree — used for paragraphs, labels, and supporting text
+          throughout the app.
+        </Body>
+        <Body muted style={{ marginTop: 6 }}>Muted body for secondary information.</Body>
+      </Card>
+
+      {/* Buttons */}
+      <SectionTitle eyebrow="Components" title="Buttons" style={styles.section} />
+      <Card style={{ gap: spacing.md }}>
+        <Button label="Primary (navy)" variant="primary" onPress={() => {}} />
+        <Button label="Teal accent" variant="teal" onPress={() => {}} />
+        <Button label="Secondary" variant="secondary" onPress={() => {}} />
+        <Button label="Ghost" variant="ghost" onPress={() => {}} />
+        <View style={styles.btnRow}>
+          <Button label="Disabled" variant="primary" disabled fullWidth={false} style={{ flex: 1 }} />
+          <Button label="Loading" variant="teal" loading fullWidth={false} style={{ flex: 1 }} />
+        </View>
+      </Card>
+
+      {/* Card */}
+      <SectionTitle
+        eyebrow="Components"
+        title="Card"
+        action="Action"
+        onActionPress={() => {}}
+        style={styles.section}
+      />
+      <Card>
+        <H2>Elevated surface</H2>
+        <Body muted style={{ marginTop: 4 }}>
+          White card with soft shadow, used on light screens for content grouping.
+        </Body>
+        <Divider />
+        <Body>Dividers separate stacked rows inside a card.</Body>
+      </Card>
+
+      {/* Pills + Badges */}
+      <SectionTitle eyebrow="Components" title="Pills & status badges" style={styles.section} />
+      <Card>
+        <Text style={styles.miniLabel}>Pills (segmented)</Text>
+        <View style={styles.pillRow}>
+          {['Yearly', 'Quarterly', 'Monthly'].map((p) => (
+            <Pill key={p} label={p} active={activePill === p} onPress={() => setActivePill(p)} />
+          ))}
+        </View>
+
+        <Text style={[styles.miniLabel, { marginTop: spacing.lg }]}>Lead status badges</Text>
+        <View style={styles.badgeWrap}>
+          {LEAD_STATUS_ORDER.map((s) => (
+            <StatusBadge key={s} status={s} />
+          ))}
+        </View>
+      </Card>
+
+      {/* Slider */}
+      <SectionTitle eyebrow="Components" title="Slider" style={styles.section} />
+      <Card>
+        <View style={styles.sliderHead}>
+          <Text style={styles.miniLabel}>Drag to adjust</Text>
+          <Text style={styles.sliderValue}>{slider}%</Text>
+        </View>
+        <Slider value={slider} min={0} max={100} step={5} onChange={setSlider} />
+      </Card>
+
+      {/* Dark surface sample */}
+      <SectionTitle eyebrow="Components" title="On dark surface" style={styles.section} />
+      <View style={styles.darkCard}>
+        <Eyebrow style={{ color: colors.tealLight }}>Income by Design</Eyebrow>
+        <Text style={styles.darkTitle}>$120,000</Text>
+        <Body light style={{ marginTop: 4 }}>Projected income · navy/indigo surface</Body>
+        <Button label="Teal on dark" variant="teal" onPress={() => {}} style={{ marginTop: spacing.lg }} />
+      </View>
+
+      <Text style={styles.footer}>Spectaculeads design system · Sora + Figtree</Text>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.lightBg },
-  topRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: spacing.xl,
-  },
-  greeting: { fontFamily: fonts.body, fontSize: 15, color: colors.muted },
-  creditsChip: {
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    backgroundColor: colors.white,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: radii.pill,
+    gap: spacing.md,
+    marginBottom: spacing.xl,
+  },
+  subtitle: { fontFamily: fonts.body, fontSize: 14, color: colors.muted, marginTop: 2 },
+  section: { marginTop: spacing.xl },
+  logoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  swatchGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
+  swatch: { width: '47%' },
+  swatchChip: {
+    height: 64,
+    borderRadius: radii.md,
+    justifyContent: 'flex-end',
+    padding: spacing.sm,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  creditsText: { fontFamily: fonts.bodySemi, fontSize: 13, color: colors.text },
-  hero: {
+  swatchHex: { fontFamily: fonts.bodyMedium, fontSize: 12 },
+  swatchName: { fontFamily: fonts.bodySemi, fontSize: 13, color: colors.text, marginTop: 6 },
+  btnRow: { flexDirection: 'row', gap: spacing.md },
+  miniLabel: {
+    fontFamily: fonts.bodySemi,
+    fontSize: 12,
+    color: colors.muted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  pillRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+    backgroundColor: colors.lightBg,
+    borderRadius: radii.pill,
+    padding: 4,
+  },
+  badgeWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm },
+  sliderHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  sliderValue: { fontFamily: fonts.heading, fontSize: 18, color: colors.indigo },
+  darkCard: {
     backgroundColor: colors.indigo,
     borderRadius: radii.xl,
     padding: spacing.xl,
-    marginBottom: spacing.lg,
-    overflow: 'hidden',
   },
-  heroTitle: {
+  darkTitle: {
     fontFamily: fonts.heading,
-    fontSize: 24,
+    fontSize: 34,
     color: colors.white,
-    marginTop: 10,
-    letterSpacing: -0.4,
-  },
-  heroBig: {
-    fontFamily: fonts.heading,
-    fontSize: 36,
-    color: colors.white,
-    marginTop: 8,
+    marginTop: 6,
     letterSpacing: -1,
   },
-  heroSub: {
+  footer: {
     fontFamily: fonts.body,
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.7)',
-    marginTop: 6,
-    lineHeight: 20,
+    fontSize: 12,
+    color: colors.muted,
+    textAlign: 'center',
+    marginTop: spacing.xl,
   },
-  heroBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: colors.teal,
-    alignSelf: 'flex-start',
-    paddingHorizontal: 16,
-    paddingVertical: 11,
-    borderRadius: radii.pill,
-    marginTop: spacing.lg,
-  },
-  heroBtnText: { fontFamily: fonts.bodySemi, fontSize: 14, color: colors.navy },
-  statRow: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.xl },
-  statTile: { flex: 1, padding: spacing.md, alignItems: 'flex-start' },
-  tileValue: { fontFamily: fonts.heading, fontSize: 22, color: colors.text },
-  tileLabel: { fontFamily: fonts.body, fontSize: 12, color: colors.muted, marginTop: 2 },
-  sectionHead: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  link: { fontFamily: fonts.bodySemi, fontSize: 14, color: colors.teal },
-  leadCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    marginBottom: spacing.md,
-    padding: spacing.md,
-  },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(39,183,206,0.14)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.tealDeep },
-  leadName: { fontFamily: fonts.bodySemi, fontSize: 15, color: colors.text },
-  leadMeta: { fontFamily: fonts.body, fontSize: 13, color: colors.muted, marginTop: 2 },
-  time: { fontFamily: fonts.body, fontSize: 11, color: colors.muted },
-  buyBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    backgroundColor: colors.white,
-    borderRadius: radii.lg,
-    padding: spacing.lg,
-    marginTop: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  buyTitle: { fontFamily: fonts.bodySemi, fontSize: 15, color: colors.text },
 });

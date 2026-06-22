@@ -1,29 +1,42 @@
 import React from 'react';
 import { StyleSheet, Text, View, ViewStyle } from 'react-native';
-import { colors, fonts, radii } from '../theme';
+import Svg, { Defs, LinearGradient, Stop, Text as SvgText, TSpan } from 'react-native-svg';
+import { colors, fonts } from '../theme';
 
 /**
- * The "SL" logo mark — teal S, white L on an indigo tile.
- * (Gradient on the S is approximated with the teal accent to avoid extra deps.)
+ * The "SL" logo mark — a teal-gradient "S" and a white "L" on an indigo tile.
+ * The gradient fill is rendered with react-native-svg so it works on web + native.
  */
 export function LogoMark({ size = 64, style }: { size?: number; style?: ViewStyle }) {
-  const fontSize = size * 0.5;
+  const fontSize = size * 0.52;
   return (
     <View
       style={[
         styles.tile,
-        {
-          width: size,
-          height: size,
-          borderRadius: size * 0.28,
-        },
+        { width: size, height: size, borderRadius: size * 0.28 },
         style,
       ]}
     >
-      <Text style={[styles.mark, { fontSize }]}>
-        <Text style={{ color: colors.teal }}>S</Text>
-        <Text style={{ color: colors.white }}>L</Text>
-      </Text>
+      <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <Defs>
+          <LinearGradient id="slTeal" x1="0" y1="0" x2="1" y2="1">
+            <Stop offset="0" stopColor={colors.tealDeep} />
+            <Stop offset="0.55" stopColor={colors.teal} />
+            <Stop offset="1" stopColor={colors.tealLight} />
+          </LinearGradient>
+        </Defs>
+        <SvgText
+          x={size / 2}
+          y={size * 0.7}
+          textAnchor="middle"
+          fontFamily={fonts.heading}
+          fontWeight="700"
+          fontSize={fontSize}
+        >
+          <TSpan fill="url(#slTeal)">S</TSpan>
+          <TSpan fill={colors.white}>L</TSpan>
+        </SvgText>
+      </Svg>
     </View>
   );
 }
@@ -44,16 +57,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(95,211,227,0.35)',
   },
-  mark: {
-    fontFamily: fonts.heading,
-    letterSpacing: -1,
-    includeFontPadding: false,
-  },
   word: {
     fontFamily: fonts.heading,
     fontSize: 22,
     letterSpacing: -0.4,
   },
 });
-
-export { radii };

@@ -44,6 +44,39 @@ export function Eyebrow({ children, style }: TextProps) {
   return <Text style={[styles.eyebrow, style]}>{children}</Text>;
 }
 
+export function SectionTitle({
+  title,
+  eyebrow,
+  subtitle,
+  action,
+  onActionPress,
+  style,
+}: {
+  title: string;
+  eyebrow?: string;
+  subtitle?: string;
+  action?: string;
+  onActionPress?: () => void;
+  style?: ViewStyle;
+}) {
+  return (
+    <View style={[styles.sectionTitle, style]}>
+      <View style={{ flex: 1 }}>
+        {eyebrow ? <Eyebrow style={{ marginBottom: 4 }}>{eyebrow}</Eyebrow> : null}
+        <Text style={styles.h2}>{title}</Text>
+        {subtitle ? (
+          <Text style={[styles.body, { color: colors.muted, marginTop: 2 }]}>{subtitle}</Text>
+        ) : null}
+      </View>
+      {action ? (
+        <Text onPress={onActionPress} style={styles.sectionAction}>
+          {action}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
+
 export function Stat({ label, value }: { label: string; value: string }) {
   return (
     <View style={{ flex: 1 }}>
@@ -125,6 +158,18 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
     color: colors.text,
+  },
+  sectionTitle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.md,
+  },
+  sectionAction: {
+    fontFamily: fonts.bodySemi,
+    fontSize: 14,
+    color: colors.teal,
+    paddingLeft: spacing.md,
   },
   eyebrow: {
     fontFamily: fonts.bodySemi,
