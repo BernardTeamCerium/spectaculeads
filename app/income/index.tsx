@@ -16,9 +16,15 @@ export default function IncomeWelcome() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
+  // Coming from login there's nothing to pop to, so skip straight into the app.
+  const onClose = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace('/(tabs)');
+  };
+
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
-      <Pressable style={styles.close} onPress={() => router.back()}>
+      <Pressable style={styles.close} onPress={onClose}>
         <Ionicons name="close" size={24} color={colors.white} />
       </Pressable>
 

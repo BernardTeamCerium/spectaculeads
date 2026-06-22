@@ -8,61 +8,87 @@ import { colors, fonts } from '../src/theme';
 export default function Splash() {
   const router = useRouter();
   const { signedIn } = useApp();
+
+  // Logo: scales up while spinning two full turns, fading in.
   const spin = useRef(new Animated.Value(0)).current;
-  const scale = useRef(new Animated.Value(0.6)).current;
-  const fade = useRef(new Animated.Value(0)).current;
-  const tagline = useRef(new Animated.Value(0)).current;
+  const scale = useRef(new Animated.Value(0.2)).current;
+  const markFade = useRef(new Animated.Value(0)).current;
+  // Wordmark + tagline fade/slide in after the mark settles.
+  const wordFade = useRef(new Animated.Value(0)).current;
+  const wordShift = useRef(new Animated.Value(12)).current;
+  const taglineFade = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.sequence([
+      // 1) SL mark spins up + scales in
       Animated.parallel([
         Animated.timing(spin, {
           toValue: 1,
-          duration: 900,
+          duration: 1300,
           easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }),
-        Animated.spring(scale, {
+        Animated.timing(scale, {
           toValue: 1,
-          friction: 5,
-          tension: 60,
+          duration: 1300,
+          easing: Easing.out(Easing.back(1.4)),
           useNativeDriver: true,
         }),
-        Animated.timing(fade, {
+        Animated.timing(markFade, {
           toValue: 1,
-          duration: 600,
+          duration: 450,
+          easing: Easing.out(Easing.quad),
           useNativeDriver: true,
         }),
       ]),
-      Animated.timing(tagline, {
+      // 2) Wordmark fades + lifts in
+      Animated.parallel([
+        Animated.timing(wordFade, {
+          toValue: 1,
+          duration: 420,
+          useNativeDriver: true,
+        }),
+        Animated.timing(wordShift, {
+          toValue: 0,
+          duration: 420,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+      ]),
+      // 3) Tagline fades in
+      Animated.timing(taglineFade, {
         toValue: 1,
-        duration: 500,
+        duration: 420,
         useNativeDriver: true,
       }),
-    ]).start();
+      // 4) Hold a beat before leaving
+      Animated.delay(450),
+    ]).start(({ finished }) => {
+      if (finished) router.replace(signedIn ? '/(tabs)' : '/login');
+    });
+  }, [router, signedIn, spin, scale, markFade, wordFade, wordShift, taglineFade]);
 
-    const t = setTimeout(() => {
-      router.replace(signedIn ? '/(tabs)' : '/login');
-    }, 2300);
-    return () => clearTimeout(t);
-  }, [router, signedIn, spin, scale, fade, tagline]);
-
+  // Two full rotations (720°), ending upright.
   const rotate = spin.interpolate({
     inputRange: [0, 1],
-    outputRange: ['-180deg', '0deg'],
+    outputRange: ['0deg', '720deg'],
   });
 
   return (
     <View style={styles.container}>
-      <Animated.View style={{ opacity: fade, transform: [{ scale }, { rotate }] }}>
-        <LogoMark size={104} />
+      <Animated.View style={{ opacity: markFade, transform: [{ scale }, { rotate }] }}>
+        <LogoMark size={108} />
       </Animated.View>
-      <Animated.View style={{ opacity: fade, marginTop: 22, alignItems: 'center' }}>
+
+      <Animated.View
+        style={{ opacity: wordFade, transform: [{ translateY: wordShift }], marginTop: 26, alignItems: 'center' }}
+      >
         <Text style={styles.brand}>
           Spectacu<Text style={{ color: colors.teal }}>leads</Text>
         </Text>
       </Animated.View>
-      <Animated.Text style={[styles.tagline, { opacity: tagline }]}>
+
+      <Animated.Text style={[styles.tagline, { opacity: taglineFade }]}>
         Your income goal, delivered.
       </Animated.Text>
     </View>

@@ -25,7 +25,8 @@ export default function Login() {
 
   const onSignIn = () => {
     signIn(email);
-    router.replace('/(tabs)');
+    // Fake auth: land new arrivals on the Income by Design welcome.
+    router.replace('/income');
   };
 
   return (
