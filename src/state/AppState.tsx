@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
-import { DEMO_ADVISOR, SAMPLE_LEADS } from '../data/mock';
+import { DEMO_ADVISOR, generateLeads, LEADS_PER_PURCHASE, SAMPLE_LEADS } from '../data/mock';
 import { computePlan, DEFAULT_PLAN_INPUTS } from '../lib/incomePlan';
 import { CreditPackage, Lead, LeadStatus, LicenseStatus, PlanInputs, PlanResults, Transaction } from '../types';
 
@@ -107,7 +107,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     return ok;
   }, []);
 
-  /** Complete a (mock) purchase: credit the account and log the transaction. */
+  /**
+   * Complete a (mock) purchase: credit the account, log the transaction, and
+   * drop a couple of fresh "Available" leads into the inbox.
+   */
   const purchasePackage = useCallback((pkg: CreditPackage) => {
     setCredits((c) => c + pkg.credits);
     setTransactions((prev) => [
@@ -121,6 +124,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       },
       ...prev,
     ]);
+    setLeads((prev) => [...generateLeads(LEADS_PER_PURCHASE), ...prev]);
   }, []);
 
   const updateLeadStatus = useCallback((id: string, status: LeadStatus) => {

@@ -35,8 +35,7 @@ export const CREDIT_PACKAGES: CreditPackage[] = [
     name: 'Plus',
     price: 99.99,
     credits: 10,
-    perks: ['10 verified leads', 'Priority delivery', 'Chat support', 'Best value'],
-    highlight: true,
+    perks: ['10 verified leads', 'Priority delivery', 'Chat support'],
   },
   {
     id: 'pro',
@@ -44,6 +43,7 @@ export const CREDIT_PACKAGES: CreditPackage[] = [
     price: 199.99,
     credits: 20,
     perks: ['20 verified leads', 'Instant delivery', 'Dedicated support', 'Lead replacement'],
+    highlight: true,
   },
 ];
 
@@ -198,4 +198,42 @@ export function fullName(lead: Pick<Lead, 'firstName' | 'lastName'>): string {
 /** Initials for avatars, e.g. "MB". */
 export function initials(lead: Pick<Lead, 'firstName' | 'lastName'>): string {
   return `${lead.firstName[0] ?? ''}${lead.lastName[0] ?? ''}`.toUpperCase();
+}
+
+/** How many fresh leads a single purchase drops into the inbox. */
+export const LEADS_PER_PURCHASE = 2;
+
+/** Rotating pool of candidate leads used when a purchase delivers new leads. */
+const FRESH_LEAD_POOL: Omit<Lead, 'id' | 'status' | 'date'>[] = [
+  { firstName: 'Nina', lastName: 'Alvarez', state: 'NM', vertical: 'Retirement', assets: '$250k–$500k', phone: '(505) 555-0211' },
+  { firstName: 'Caleb', lastName: 'Watson', state: 'OH', vertical: 'Life', assets: '$100k–$250k', phone: '(614) 555-0233' },
+  { firstName: 'Maya', lastName: 'Schmidt', state: 'WI', vertical: 'Annuities', assets: '$500k–$1M', phone: '(414) 555-0245' },
+  { firstName: 'Omar', lastName: 'Haddad', state: 'MI', vertical: 'IUL', assets: '$250k–$500k', phone: '(313) 555-0257' },
+  { firstName: 'Bridget', lastName: 'Flynn', state: 'PA', vertical: 'Medicare', assets: 'Under $100k', phone: '(215) 555-0269' },
+  { firstName: 'Andre', lastName: 'Mensah', state: 'MD', vertical: 'Life', assets: '$100k–$250k', phone: '(410) 555-0271' },
+  { firstName: 'Lucia', lastName: 'Romano', state: 'NV', vertical: 'Retirement', assets: '$1M+', phone: '(702) 555-0283' },
+  { firstName: 'Trevor', lastName: 'Park', state: 'UT', vertical: 'Final Expense', assets: 'Under $100k', phone: '(801) 555-0295' },
+];
+
+let freshLeadCursor = 0;
+
+/**
+ * Generate `count` brand-new "Available" leads (unique ids, current timestamp)
+ * to drop into the inbox after a purchase. Draws from a rotating pool so
+ * repeated purchases surface different people.
+ */
+export function generateLeads(count: number): Lead[] {
+  const now = Date.now();
+  const leads: Lead[] = [];
+  for (let i = 0; i < count; i++) {
+    const template = FRESH_LEAD_POOL[freshLeadCursor % FRESH_LEAD_POOL.length];
+    freshLeadCursor += 1;
+    leads.push({
+      ...template,
+      id: `gen_${now}_${i}`,
+      status: 'Available',
+      date: new Date(now).toISOString(),
+    });
+  }
+  return leads;
 }

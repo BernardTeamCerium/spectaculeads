@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../src/components/Button';
-import { CREDIT_PACKAGES } from '../src/data/mock';
+import { CREDIT_PACKAGES, LEADS_PER_PURCHASE } from '../src/data/mock';
 import { useApp } from '../src/state/AppState';
 import { colors, fonts, radii, spacing } from '../src/theme';
 import { money } from '../src/utils/format';
@@ -50,7 +50,7 @@ export default function Checkout() {
         </View>
         <Text style={styles.successTitle}>Payment complete</Text>
         <Text style={styles.successSub}>
-          {selected.credits} credits added to your account.
+          {selected.credits} credits added · {LEADS_PER_PURCHASE} new leads dropped into your inbox.
         </Text>
         <View style={styles.balancePill}>
           <Ionicons name="flash" size={16} color={colors.teal} />
@@ -127,8 +127,9 @@ export default function Checkout() {
 
         <View style={styles.secureNote}>
           <Ionicons name="lock-closed" size={14} color={colors.muted} />
-          <Text style={styles.secureText}>Demo checkout — no real card is charged.</Text>
+          <Text style={styles.secureText}>Secured by Stripe</Text>
         </View>
+        <Text style={styles.demoText}>Demo checkout — no real card is charged.</Text>
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.md }]}>
@@ -207,7 +208,8 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   secureNote: { flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center', marginTop: spacing.md },
-  secureText: { fontFamily: fonts.body, fontSize: 12, color: colors.muted },
+  secureText: { fontFamily: fonts.bodySemi, fontSize: 13, color: colors.text },
+  demoText: { fontFamily: fonts.body, fontSize: 12, color: colors.muted, textAlign: 'center', marginTop: 4 },
   footer: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,

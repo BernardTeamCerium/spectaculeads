@@ -115,10 +115,8 @@ export default function Buy() {
         )}
 
         <View style={styles.trust}>
-          <Ionicons name="shield-checkmark-outline" size={18} color={colors.muted} />
-          <Text style={styles.trustText}>
-            Secure checkout · Demo only — no real payment is processed.
-          </Text>
+          <Ionicons name="lock-closed" size={14} color={colors.muted} />
+          <Text style={styles.trustText}>Secured by Stripe · demo only, no real payment.</Text>
         </View>
       </ScrollView>
     </View>
