@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -24,17 +24,20 @@ export default function Checkout() {
   const { pkg } = useLocalSearchParams<{ pkg: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { addCredits, credits } = useApp();
+  const { purchasePackage, credits } = useApp();
 
   const selected = CREDIT_PACKAGES.find((p) => p.id === pkg) ?? CREDIT_PACKAGES[0];
   const [phase, setPhase] = useState<Phase>('form');
+  const paidRef = useRef(false);
   const tax = selected.price * 0.0;
   const total = selected.price + tax;
 
   const pay = () => {
+    if (paidRef.current) return; // guard against double-charge
+    paidRef.current = true;
     setPhase('processing');
     setTimeout(() => {
-      addCredits(selected.credits);
+      purchasePackage(selected);
       setPhase('done');
     }, 1400);
   };

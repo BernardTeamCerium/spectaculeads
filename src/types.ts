@@ -54,6 +54,16 @@ export interface CreditPackage {
   highlight?: boolean;
 }
 
+/** A completed (mock) credit purchase, recorded in live state. */
+export interface Transaction {
+  id: string;
+  packageId: string;
+  packageName: string;
+  credits: number;
+  amount: number;
+  date: string; // ISO timestamp
+}
+
 export interface PlanInputs {
   netIncomeGoal: number; // desired NET yearly income ($)
   avgSale: number; // average sale amount ($)

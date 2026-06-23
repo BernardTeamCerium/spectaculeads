@@ -2,16 +2,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Eyebrow, H1 } from '../../src/components/ui';
+import { Eyebrow, H1, H2 } from '../../src/components/ui';
 import { CREDIT_PACKAGES } from '../../src/data/mock';
 import { useApp } from '../../src/state/AppState';
 import { colors, fonts, radii, spacing } from '../../src/theme';
-import { money } from '../../src/utils/format';
+import { money, timeAgo } from '../../src/utils/format';
 
 export default function Buy() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { credits } = useApp();
+  const { credits, transactions } = useApp();
 
   return (
     <View style={styles.screen}>
@@ -94,6 +94,26 @@ export default function Buy() {
           );
         })}
 
+        {transactions.length > 0 && (
+          <View style={styles.history}>
+            <H2 style={{ marginBottom: spacing.md }}>Recent purchases</H2>
+            {transactions.map((tx) => (
+              <View key={tx.id} style={styles.txRow}>
+                <View style={styles.txIcon}>
+                  <Ionicons name="flash" size={16} color={colors.teal} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.txName}>{tx.packageName} pack</Text>
+                  <Text style={styles.txMeta}>
+                    +{tx.credits} credits · {timeAgo(tx.date)}
+                  </Text>
+                </View>
+                <Text style={styles.txAmount}>{money(tx.amount, { cents: true })}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
         <View style={styles.trust}>
           <Ionicons name="shield-checkmark-outline" size={18} color={colors.muted} />
           <Text style={styles.trustText}>
@@ -170,7 +190,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     justifyContent: 'center',
-    marginTop: spacing.sm,
+    marginTop: spacing.lg,
   },
   trustText: { fontFamily: fonts.body, fontSize: 12, color: colors.muted },
+  history: { marginTop: spacing.sm, marginBottom: spacing.sm },
+  txRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    backgroundColor: colors.white,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  txIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(39,183,206,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  txName: { fontFamily: fonts.bodySemi, fontSize: 15, color: colors.text },
+  txMeta: { fontFamily: fonts.body, fontSize: 13, color: colors.muted, marginTop: 2 },
+  txAmount: { fontFamily: fonts.bodySemi, fontSize: 15, color: colors.text },
 });

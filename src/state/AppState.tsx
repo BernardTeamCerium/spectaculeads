@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { DEMO_ADVISOR, SAMPLE_LEADS } from '../data/mock';
 import { computePlan, DEFAULT_PLAN_INPUTS } from '../lib/incomePlan';
-import { Lead, LeadStatus, LicenseStatus, PlanInputs, PlanResults } from '../types';
+import { CreditPackage, Lead, LeadStatus, LicenseStatus, PlanInputs, PlanResults, Transaction } from '../types';
 
 export type { LicenseStatus } from '../types';
 export { computePlan } from '../lib/incomePlan';
@@ -34,8 +34,10 @@ interface AppStateShape {
 
   // credits
   credits: number;
+  transactions: Transaction[];
   addCredits: (n: number) => void;
   spendCredit: () => boolean;
+  purchasePackage: (pkg: CreditPackage) => void;
 
   // leads
   leads: Lead[];
@@ -61,6 +63,7 @@ const AppStateContext = createContext<AppStateShape | null>(null);
 export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [signedIn, setSignedIn] = useState(false);
   const [credits, setCredits] = useState(DEMO_ADVISOR.credits);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [leads, setLeads] = useState<Lead[]>(SAMPLE_LEADS);
   const [planInputs, setPlanInputsState] = useState<PlanInputs>(DEFAULT_PLAN_INPUTS);
   const [planComplete, setPlanComplete] = useState(false);
@@ -104,6 +107,22 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     return ok;
   }, []);
 
+  /** Complete a (mock) purchase: credit the account and log the transaction. */
+  const purchasePackage = useCallback((pkg: CreditPackage) => {
+    setCredits((c) => c + pkg.credits);
+    setTransactions((prev) => [
+      {
+        id: `tx_${Date.now()}`,
+        packageId: pkg.id,
+        packageName: pkg.name,
+        credits: pkg.credits,
+        amount: pkg.price,
+        date: new Date().toISOString(),
+      },
+      ...prev,
+    ]);
+  }, []);
+
   const updateLeadStatus = useCallback((id: string, status: LeadStatus) => {
     setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status } : l)));
   }, []);
@@ -128,8 +147,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       signOut,
       user,
       credits,
+      transactions,
       addCredits,
       spendCredit,
+      purchasePackage,
       leads,
       updateLeadStatus,
       updateLeadNotes,
@@ -148,8 +169,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       signOut,
       user,
       credits,
+      transactions,
       addCredits,
       spendCredit,
+      purchasePackage,
       leads,
       updateLeadStatus,
       updateLeadNotes,
