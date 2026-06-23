@@ -5,6 +5,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../../src/components/Button';
 import { Body, Card, Divider, Eyebrow, H1, H2 } from '../../src/components/ui';
+import { CLOSE_RATE, SHOW_RATE } from '../../src/lib/incomePlan';
 import { useApp } from '../../src/state/AppState';
 import { colors, fonts, radii, spacing } from '../../src/theme';
 import { money } from '../../src/utils/format';
@@ -12,6 +13,10 @@ import { money } from '../../src/utils/format';
 type Period = 'Yearly' | 'Quarterly' | 'Monthly';
 const PERIODS: Period[] = ['Yearly', 'Quarterly', 'Monthly'];
 const DIVISOR: Record<Period, number> = { Yearly: 1, Quarterly: 4, Monthly: 12 };
+
+// Rates come straight from the calc module so they can never drift from Results.
+const SHOW_PCT = Math.round(SHOW_RATE * 100);
+const CLOSE_PCT = Math.round(CLOSE_RATE * 100);
 
 export default function Plan() {
   const insets = useSafeAreaInsets();
@@ -24,7 +29,9 @@ export default function Plan() {
   const deals = Math.ceil(planResults.dealsNeeded / d);
   const appointments = Math.ceil(planResults.appointmentsNeeded / d);
   const leads = Math.ceil(planResults.leadsNeeded / d);
+
   const periodLabel = period === 'Yearly' ? 'year' : period === 'Quarterly' ? 'quarter' : 'month';
+  const isYearly = period === 'Yearly';
 
   return (
     <View style={styles.screen}>
@@ -53,7 +60,7 @@ export default function Plan() {
           </Card>
         )}
 
-        {/* Period tabs */}
+        {/* Period toggle */}
         <View style={styles.tabs}>
           {PERIODS.map((p) => {
             const active = p === period;
@@ -69,54 +76,95 @@ export default function Plan() {
           })}
         </View>
 
-        {/* Headline card */}
+        {/* Headline: target + funnel for the selected period */}
         <View style={styles.headline}>
-          <Text style={styles.headlineLabel}>Target income / {periodLabel}</Text>
+          <Text style={styles.headlineLabel}>
+            {isYearly ? 'Annual income target' : `Target per ${periodLabel}`}
+          </Text>
           <Text style={styles.headlineValue}>{money(income)}</Text>
           <View style={styles.headlineRow}>
-            <View style={styles.headlineStat}>
-              <Text style={styles.hsValue}>{deals}</Text>
-              <Text style={styles.hsLabel}>deals</Text>
-            </View>
+            <Stat value={`${deals}`} label="deals" />
             <View style={styles.headlineDivider} />
-            <View style={styles.headlineStat}>
-              <Text style={styles.hsValue}>{appointments}</Text>
-              <Text style={styles.hsLabel}>appts</Text>
-            </View>
+            <Stat value={`${appointments}`} label="appts" />
             <View style={styles.headlineDivider} />
-            <View style={styles.headlineStat}>
-              <Text style={styles.hsValue}>{leads}</Text>
-              <Text style={styles.hsLabel}>leads</Text>
-            </View>
+            <Stat value={`${leads}`} label="leads" />
           </View>
         </View>
 
-        <H2 style={{ marginTop: spacing.xl, marginBottom: spacing.md }}>Breakdown</H2>
-        <Card>
-          <Row label="Net income goal" value={`${money(income)} / ${periodLabel}`} />
-          <Divider />
-          <Row label="Deals to close" value={`${deals}`} />
-          <Divider />
-          <Row label="Appointments to set" value={`${appointments}`} />
-          <Divider />
-          <Row label="Leads to work" value={`${leads}`} />
-          <Divider />
-          <Row label="Show rate / close rate" value="33% / 33%" />
-          <Divider />
-          <Row label="Avg commission / deal" value={money(planInputs.avgCommission)} />
-        </Card>
+        {isYearly ? (
+          <>
+            {/* Conversion goals (Yearly) */}
+            <H2 style={styles.sectionHead}>Conversion goals</H2>
+            <Card>
+              <View style={styles.goalRow}>
+                <View style={styles.goalTile}>
+                  <Text style={styles.goalValue}>{SHOW_PCT}%</Text>
+                  <Text style={styles.goalLabel}>Show rate</Text>
+                  <Text style={styles.goalHint}>leads → appointments</Text>
+                </View>
+                <View style={styles.goalSplit} />
+                <View style={styles.goalTile}>
+                  <Text style={styles.goalValue}>{CLOSE_PCT}%</Text>
+                  <Text style={styles.goalLabel}>Close rate</Text>
+                  <Text style={styles.goalHint}>appointments → deals</Text>
+                </View>
+              </View>
+            </Card>
+
+            {/* Annual breakdown */}
+            <H2 style={styles.sectionHead}>Annual breakdown</H2>
+            <Card>
+              <Row label="Net income goal" value={money(income)} />
+              <Divider />
+              <Row label="Deals to close" value={`${deals}`} />
+              <Divider />
+              <Row label="Appointments to set" value={`${appointments}`} />
+              <Divider />
+              <Row label="Leads to work" value={`${leads}`} />
+              <Divider />
+              <Row label="Avg commission / deal" value={money(planInputs.avgCommission)} />
+            </Card>
+          </>
+        ) : (
+          <>
+            {/* Per-period breakdown (Quarterly / Monthly) */}
+            <H2 style={styles.sectionHead}>Per-{periodLabel} breakdown</H2>
+            <Card>
+              <Row label={`Income / ${periodLabel}`} value={money(income)} />
+              <Divider />
+              <Row label="Deals to close" value={`${deals}`} />
+              <Divider />
+              <Row label="Appointments to set" value={`${appointments}`} />
+              <Divider />
+              <Row label="Leads to work" value={`${leads}`} />
+            </Card>
+            <Text style={styles.caption}>
+              Your annual plan split across {d} {period === 'Quarterly' ? 'quarters' : 'months'} ·{' '}
+              {SHOW_PCT}% show rate, {CLOSE_PCT}% close rate.
+            </Text>
+          </>
+        )}
 
         <View style={styles.tipCard}>
           <Ionicons name="bulb-outline" size={20} color={colors.teal} />
           <Body style={{ flex: 1, fontSize: 13 }}>
             Working roughly{' '}
             <Text style={{ fontFamily: fonts.bodySemi }}>
-              {Math.ceil(leads / (period === 'Monthly' ? 4 : period === 'Quarterly' ? 13 : 52))} leads/week
+              {Math.ceil(planResults.leadsNeeded / 52)} leads/week
             </Text>{' '}
             keeps you on pace for this goal.
           </Body>
         </View>
       </ScrollView>
+    </View>
+  );
+}
+
+function Stat({ value, label }: { value: string; label: string }) {
+  return (
+    <View style={styles.headlineStat}>
+      <Text style={styles.hsValue}>{value}</Text>
+      <Text style={styles.hsLabel}>{label}</Text>
     </View>
   );
 }
@@ -178,9 +226,23 @@ const styles = StyleSheet.create({
   hsValue: { fontFamily: fonts.headingSemi, fontSize: 18, color: colors.tealLight },
   hsLabel: { fontFamily: fonts.body, fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 2 },
   headlineDivider: { width: 1, height: 28, backgroundColor: 'rgba(255,255,255,0.12)' },
+  sectionHead: { marginTop: spacing.xl, marginBottom: spacing.md },
+  goalRow: { flexDirection: 'row', alignItems: 'center' },
+  goalTile: { flex: 1, alignItems: 'center' },
+  goalSplit: { width: 1, height: 56, backgroundColor: colors.border },
+  goalValue: { fontFamily: fonts.heading, fontSize: 30, color: colors.teal, letterSpacing: -0.5 },
+  goalLabel: { fontFamily: fonts.bodySemi, fontSize: 14, color: colors.text, marginTop: 4 },
+  goalHint: { fontFamily: fonts.body, fontSize: 12, color: colors.muted, marginTop: 2 },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   rowLabel: { fontFamily: fonts.body, fontSize: 15, color: colors.muted },
   rowValue: { fontFamily: fonts.bodySemi, fontSize: 15, color: colors.text },
+  caption: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.muted,
+    marginTop: spacing.md,
+    lineHeight: 19,
+  },
   tipCard: {
     flexDirection: 'row',
     gap: spacing.md,
