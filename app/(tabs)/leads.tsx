@@ -1,31 +1,89 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Card, Eyebrow, H1, StatusBadge } from '../../src/components/ui';
 import { fullName, initials } from '../../src/data/mock';
 import { useApp } from '../../src/state/AppState';
-import { LeadStatus } from '../../src/types';
+import { Lead, LeadStatus } from '../../src/types';
 import { colors, fonts, radii, spacing } from '../../src/theme';
 import { timeAgo } from '../../src/utils/format';
 
 type Filter = 'All' | LeadStatus;
 const FILTERS: Filter[] = ['All', 'Available', 'Contacted', 'Delivered', 'Appointment Set'];
 
+/** Build CSV text from leads (used by the export stub). */
+function toCsv(leads: Lead[]): string {
+  const esc = (v: string) => `"${v.replace(/"/g, '""')}"`;
+  const header = ['Name', 'State', 'Vertical', 'Assets', 'Phone', 'Status', 'Notes', 'Received'];
+  const rows = leads.map((l) =>
+    [fullName(l), l.state, l.vertical, l.assets, l.phone, l.status, l.notes ?? '', l.date]
+      .map((v) => esc(String(v)))
+      .join(',')
+  );
+  return [header.join(','), ...rows].join('\n');
+}
+
 export default function Leads() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { leads } = useApp();
   const [filter, setFilter] = useState<Filter>('All');
+  const [query, setQuery] = useState('');
+  const [exportMsg, setExportMsg] = useState<string | null>(null);
 
-  const filtered = filter === 'All' ? leads : leads.filter((l) => l.status === filter);
+  const q = query.trim().toLowerCase();
+  const filtered = leads.filter((l) => {
+    if (filter !== 'All' && l.status !== filter) return false;
+    if (!q) return true;
+    return (
+      fullName(l).toLowerCase().includes(q) ||
+      l.state.toLowerCase().includes(q) ||
+      l.vertical.toLowerCase().includes(q)
+    );
+  });
+
+  const onExport = () => {
+    // Stub: assemble the CSV in-memory; real share/download wired later.
+    const csv = toCsv(filtered);
+    const lineCount = csv ? csv.split('\n').length - 1 : 0;
+    setExportMsg(`Exported ${lineCount} lead${lineCount === 1 ? '' : 's'} to CSV (demo)`);
+    setTimeout(() => setExportMsg(null), 2500);
+  };
 
   return (
     <View style={styles.screen}>
       <View style={{ paddingTop: insets.top + spacing.lg, paddingHorizontal: spacing.lg }}>
-        <Eyebrow>Lead Inbox</Eyebrow>
-        <H1 style={{ marginTop: 4 }}>Your leads</H1>
+        <View style={styles.headerRow}>
+          <View style={{ flex: 1 }}>
+            <Eyebrow>Lead Inbox</Eyebrow>
+            <H1 style={{ marginTop: 4 }}>Your leads</H1>
+          </View>
+          <Pressable onPress={onExport} style={styles.exportBtn}>
+            <Ionicons name="download-outline" size={16} color={colors.indigo} />
+            <Text style={styles.exportText}>Export CSV</Text>
+          </Pressable>
+        </View>
+
+        {/* Search */}
+        <View style={styles.searchBar}>
+          <Ionicons name="search" size={18} color={colors.muted} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search name, state, or vertical"
+            placeholderTextColor={colors.muted}
+            value={query}
+            onChangeText={setQuery}
+            autoCapitalize="none"
+            returnKeyType="search"
+          />
+          {query.length > 0 && (
+            <Pressable onPress={() => setQuery('')} hitSlop={8}>
+              <Ionicons name="close-circle" size={18} color={colors.muted} />
+            </Pressable>
+          )}
+        </View>
       </View>
 
       <ScrollView
@@ -51,6 +109,13 @@ export default function Leads() {
         })}
       </ScrollView>
 
+      {exportMsg && (
+        <View style={styles.toast}>
+          <Ionicons name="checkmark-circle" size={16} color={colors.success} />
+          <Text style={styles.toastText}>{exportMsg}</Text>
+        </View>
+      )}
+
       <ScrollView
         contentContainerStyle={{
           paddingHorizontal: spacing.lg,
@@ -62,7 +127,9 @@ export default function Leads() {
         {filtered.length === 0 && (
           <Card style={{ alignItems: 'center', paddingVertical: spacing.xxl }}>
             <Ionicons name="file-tray-outline" size={32} color={colors.muted} />
-            <Text style={styles.emptyText}>No leads in “{filter}” yet.</Text>
+            <Text style={styles.emptyText}>
+              {q ? `No leads match “${query.trim()}”.` : `No leads in “${filter}” yet.`}
+            </Text>
           </Card>
         )}
 
@@ -99,6 +166,33 @@ export default function Leads() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.lightBg },
+  headerRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
+  exportBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: colors.white,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: radii.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginTop: spacing.sm,
+  },
+  exportText: { fontFamily: fonts.bodySemi, fontSize: 13, color: colors.indigo },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.white,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+    height: 46,
+    marginTop: spacing.lg,
+  },
+  searchInput: { flex: 1, fontFamily: fonts.body, fontSize: 15, color: colors.text },
   filterRow: { paddingHorizontal: spacing.lg, gap: spacing.sm },
   chip: {
     paddingHorizontal: 14,
@@ -109,6 +203,18 @@ const styles = StyleSheet.create({
   chipActive: { backgroundColor: colors.indigo, borderColor: colors.indigo },
   chipIdle: { backgroundColor: colors.white, borderColor: colors.border },
   chipText: { fontFamily: fonts.bodySemi, fontSize: 13, color: colors.muted },
+  toast: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(52,199,123,0.12)',
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.md,
+  },
+  toastText: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.text },
   leadCard: { marginBottom: spacing.md, padding: spacing.lg },
   cardTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   avatar: {
@@ -134,5 +240,5 @@ const styles = StyleSheet.create({
   },
   product: { fontFamily: fonts.bodySemi, fontSize: 14, color: colors.text },
   value: { fontFamily: fonts.body, fontSize: 13, color: colors.muted, marginTop: 2 },
-  emptyText: { fontFamily: fonts.body, fontSize: 14, color: colors.muted, marginTop: spacing.md },
+  emptyText: { fontFamily: fonts.body, fontSize: 14, color: colors.muted, marginTop: spacing.md, textAlign: 'center' },
 });
