@@ -44,19 +44,20 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <AppStateProvider>
         <StatusBar style="light" />
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.lightBg } }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="login" />
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="income" />
-          <Stack.Screen
-            name="lead/[id]"
-            options={{ presentation: 'card' }}
-          />
-          <Stack.Screen
-            name="checkout"
-            options={{ presentation: 'modal' }}
-          />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: colors.lightBg },
+            animation: 'slide_from_right',
+            animationDuration: 220,
+          }}
+        >
+          <Stack.Screen name="index" options={{ animation: 'fade' }} />
+          <Stack.Screen name="login" options={{ animation: 'fade' }} />
+          <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
+          <Stack.Screen name="income" options={{ animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="lead/[id]" options={{ animation: 'slide_from_right' }} />
+          <Stack.Screen name="checkout" options={{ presentation: 'modal' }} />
         </Stack>
       </AppStateProvider>
     </SafeAreaProvider>

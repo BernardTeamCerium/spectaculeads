@@ -44,7 +44,11 @@ export default function Buy() {
             <Pressable
               key={pkg.id}
               onPress={() => router.push(`/checkout?pkg=${pkg.id}`)}
-              style={[styles.card, pkg.highlight && styles.cardHighlight]}
+              style={({ pressed }) => [
+                styles.card,
+                pkg.highlight && styles.cardHighlight,
+                pressed && styles.pressed,
+              ]}
             >
               {pkg.highlight && (
                 <View style={styles.ribbon}>
@@ -155,6 +159,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   cardHighlight: { backgroundColor: colors.indigo, borderColor: colors.indigo },
+  pressed: { opacity: 0.92, transform: [{ scale: 0.995 }] },
   ribbon: {
     position: 'absolute',
     top: 16,

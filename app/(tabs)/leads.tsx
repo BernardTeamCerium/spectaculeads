@@ -134,7 +134,11 @@ export default function Leads() {
         )}
 
         {filtered.map((lead) => (
-          <Pressable key={lead.id} onPress={() => router.push(`/lead/${lead.id}`)}>
+          <Pressable
+            key={lead.id}
+            onPress={() => router.push(`/lead/${lead.id}`)}
+            style={({ pressed }) => pressed && styles.pressed}
+          >
             <Card style={styles.leadCard}>
               <View style={styles.cardTop}>
                 <View style={styles.avatar}>
@@ -215,6 +219,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
   },
   toastText: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.text },
+  pressed: { opacity: 0.9, transform: [{ scale: 0.995 }] },
   leadCard: { marginBottom: spacing.md, padding: spacing.lg },
   cardTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   avatar: {
