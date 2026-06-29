@@ -14,7 +14,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { View } from 'react-native';
+import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppStateProvider } from '../src/state/AppState';
 import { colors } from '../src/theme';
@@ -36,11 +36,17 @@ export default function RootLayout() {
     if (loaded) SplashScreen.hideAsync().catch(() => {});
   }, [loaded]);
 
+  const { width, height } = useWindowDimensions();
+  // On a wide (desktop) web viewport, frame the app like a phone so a shared
+  // link reads as a mobile app. On phones/narrow screens it fills the screen.
+  const framed = Platform.OS === 'web' && width > 600;
+  const frameHeight = Math.min(height - 32, 880);
+
   if (!loaded) {
     return <View style={{ flex: 1, backgroundColor: colors.navy }} />;
   }
 
-  return (
+  const app = (
     <SafeAreaProvider>
       <AppStateProvider>
         <StatusBar style="light" />
@@ -62,4 +68,31 @@ export default function RootLayout() {
       </AppStateProvider>
     </SafeAreaProvider>
   );
+
+  if (!framed) return app;
+
+  return (
+    <View style={styles.stage}>
+      <View style={[styles.phone, { height: frameHeight }]}>{app}</View>
+    </View>
+  );
 }
+
+const styles = StyleSheet.create({
+  stage: {
+    flex: 1,
+    backgroundColor: colors.navy,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  phone: {
+    width: 390,
+    maxWidth: '100%',
+    borderRadius: 40,
+    overflow: 'hidden',
+    backgroundColor: colors.lightBg,
+    borderWidth: 10,
+    borderColor: '#0F1130',
+    boxShadow: '0 24px 60px rgba(0,0,0,0.45)',
+  },
+});
