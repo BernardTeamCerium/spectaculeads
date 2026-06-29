@@ -33,6 +33,16 @@ export interface Lead {
 
 export type LicenseStatus = 'none' | 'pending' | 'verified';
 
+/** An insurance license shown in the advisor's "My Licenses" list. */
+export interface License {
+  id: string;
+  state: string; // 2-letter code, e.g. "CA"
+  type: string; // e.g. "Life & Health"
+  status: 'pending' | 'verified';
+  fileName?: string; // mock uploaded file name
+  submittedAt?: string; // ISO timestamp
+}
+
 export interface Advisor {
   name: string;
   email: string;

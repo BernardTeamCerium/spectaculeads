@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { DEMO_ADVISOR, generateLeads, LEADS_PER_PURCHASE, SAMPLE_LEADS } from '../data/mock';
 import { computePlan, DEFAULT_PLAN_INPUTS } from '../lib/incomePlan';
-import { CreditPackage, Lead, LeadStatus, LicenseStatus, PlanInputs, PlanResults, Transaction } from '../types';
+import { CreditPackage, Lead, LeadStatus, License, PlanInputs, PlanResults, Transaction } from '../types';
 
 export type { LicenseStatus } from '../types';
 export { computePlan } from '../lib/incomePlan';
@@ -51,10 +51,10 @@ interface AppStateShape {
   planComplete: boolean;
   setPlanComplete: (v: boolean) => void;
 
-  // license
-  licenseStatus: LicenseStatus;
-  submitLicense: () => void;
-  verifyLicense: () => void;
+  // licenses
+  licenses: License[];
+  submitLicense: (input: { state: string; type: string; fileName: string }) => void;
+  verifyLicense: (id: string) => void;
 }
 
 
@@ -67,7 +67,14 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [leads, setLeads] = useState<Lead[]>(SAMPLE_LEADS);
   const [planInputs, setPlanInputsState] = useState<PlanInputs>(DEFAULT_PLAN_INPUTS);
   const [planComplete, setPlanComplete] = useState(false);
-  const [licenseStatus, setLicenseStatus] = useState<LicenseStatus>(DEMO_ADVISOR.license.status);
+  const [licenses, setLicenses] = useState<License[]>([
+    {
+      id: 'lic_seed',
+      state: DEMO_ADVISOR.license.state,
+      type: DEMO_ADVISOR.license.type,
+      status: DEMO_ADVISOR.license.status === 'verified' ? 'verified' : 'pending',
+    },
+  ]);
   const [user, setUser] = useState<UserProfile>({
     name: DEMO_ADVISOR.name,
     email: DEMO_ADVISOR.email,
@@ -139,8 +146,28 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     setPlanInputsState((prev) => ({ ...prev, ...p }));
   }, []);
 
-  const submitLicense = useCallback(() => setLicenseStatus('pending'), []);
-  const verifyLicense = useCallback(() => setLicenseStatus('verified'), []);
+  const submitLicense = useCallback(
+    (input: { state: string; type: string; fileName: string }) => {
+      setLicenses((prev) => [
+        {
+          id: `lic_${Date.now()}`,
+          state: input.state,
+          type: input.type,
+          status: 'pending',
+          fileName: input.fileName,
+          submittedAt: new Date().toISOString(),
+        },
+        ...prev,
+      ]);
+    },
+    []
+  );
+
+  const verifyLicense = useCallback((id: string) => {
+    setLicenses((prev) =>
+      prev.map((l) => (l.id === id ? { ...l, status: 'verified' } : l))
+    );
+  }, []);
 
   const planResults = useMemo(() => computePlan(planInputs), [planInputs]);
 
@@ -163,7 +190,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       planResults,
       planComplete,
       setPlanComplete,
-      licenseStatus,
+      licenses,
       submitLicense,
       verifyLicense,
     }),
@@ -184,7 +211,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       setPlanInputs,
       planResults,
       planComplete,
-      licenseStatus,
+      licenses,
       submitLicense,
       verifyLicense,
     ]
