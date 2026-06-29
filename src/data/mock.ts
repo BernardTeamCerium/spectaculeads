@@ -47,7 +47,10 @@ export const CREDIT_PACKAGES: CreditPackage[] = [
   },
 ];
 
-/** ~12 sample leads with a mix of verticals, asset bands, and statuses. */
+/** ISO timestamp N hours before now — keeps the demo inbox looking fresh. */
+const hoursAgo = (h: number): string => new Date(Date.now() - h * 3600 * 1000).toISOString();
+
+/** Sample leads: a mix of verticals, asset bands, and all four statuses. */
 export const SAMPLE_LEADS: Lead[] = [
   {
     id: 'l1',
@@ -58,7 +61,7 @@ export const SAMPLE_LEADS: Lead[] = [
     assets: '$250k–$500k',
     phone: '(512) 555-0142',
     status: 'Available',
-    date: '2026-06-21T14:32:00Z',
+    date: hoursAgo(2),
   },
   {
     id: 'l2',
@@ -70,7 +73,7 @@ export const SAMPLE_LEADS: Lead[] = [
     phone: '(408) 555-0198',
     status: 'Contacted',
     notes: 'Left voicemail Monday. Rolling over a 401k from a previous employer.',
-    date: '2026-06-21T09:10:00Z',
+    date: hoursAgo(6),
   },
   {
     id: 'l3',
@@ -82,7 +85,7 @@ export const SAMPLE_LEADS: Lead[] = [
     phone: '(404) 555-0173',
     status: 'Delivered',
     notes: 'Sent quote packet. Following up Thursday to walk through options.',
-    date: '2026-06-20T17:45:00Z',
+    date: hoursAgo(20),
   },
   {
     id: 'l4',
@@ -94,7 +97,7 @@ export const SAMPLE_LEADS: Lead[] = [
     phone: '(305) 555-0120',
     status: 'Appointment Set',
     notes: 'Booked Zoom for Friday 11am. Wants to understand cash value growth.',
-    date: '2026-06-20T12:05:00Z',
+    date: hoursAgo(27),
   },
   {
     id: 'l5',
@@ -105,7 +108,7 @@ export const SAMPLE_LEADS: Lead[] = [
     assets: '$1M+',
     phone: '(303) 555-0166',
     status: 'Available',
-    date: '2026-06-19T20:18:00Z',
+    date: hoursAgo(33),
   },
   {
     id: 'l6',
@@ -116,7 +119,7 @@ export const SAMPLE_LEADS: Lead[] = [
     assets: '$100k–$250k',
     phone: '(704) 555-0111',
     status: 'Available',
-    date: '2026-06-19T08:52:00Z',
+    date: hoursAgo(45),
   },
   {
     id: 'l7',
@@ -128,7 +131,7 @@ export const SAMPLE_LEADS: Lead[] = [
     phone: '(206) 555-0188',
     status: 'Contacted',
     notes: 'Comparing IRA vs. brokerage. Prefers email.',
-    date: '2026-06-18T16:40:00Z',
+    date: hoursAgo(52),
   },
   {
     id: 'l8',
@@ -140,7 +143,7 @@ export const SAMPLE_LEADS: Lead[] = [
     phone: '(212) 555-0154',
     status: 'Appointment Set',
     notes: 'In-person meeting set for next Tuesday.',
-    date: '2026-06-18T11:22:00Z',
+    date: hoursAgo(58),
   },
   {
     id: 'l9',
@@ -151,7 +154,7 @@ export const SAMPLE_LEADS: Lead[] = [
     assets: 'Under $100k',
     phone: '(312) 555-0137',
     status: 'Delivered',
-    date: '2026-06-17T19:05:00Z',
+    date: hoursAgo(70),
   },
   {
     id: 'l10',
@@ -163,7 +166,7 @@ export const SAMPLE_LEADS: Lead[] = [
     phone: '(617) 555-0179',
     status: 'Contacted',
     notes: 'Wants a guaranteed-income illustration before committing.',
-    date: '2026-06-17T10:48:00Z',
+    date: hoursAgo(76),
   },
   {
     id: 'l11',
@@ -174,7 +177,7 @@ export const SAMPLE_LEADS: Lead[] = [
     assets: '$100k–$250k',
     phone: '(602) 555-0163',
     status: 'Available',
-    date: '2026-06-16T22:14:00Z',
+    date: hoursAgo(90),
   },
   {
     id: 'l12',
@@ -186,7 +189,29 @@ export const SAMPLE_LEADS: Lead[] = [
     phone: '(503) 555-0195',
     status: 'Appointment Set',
     notes: 'Referred by an existing client. Very engaged.',
-    date: '2026-06-16T13:30:00Z',
+    date: hoursAgo(98),
+  },
+  {
+    id: 'l13',
+    firstName: 'Wei',
+    lastName: 'Chen',
+    state: 'CA',
+    vertical: 'IUL',
+    assets: '$500k–$1M',
+    phone: '(415) 555-0184',
+    status: 'Available',
+    date: hoursAgo(4),
+  },
+  {
+    id: 'l14',
+    firstName: 'Danielle',
+    lastName: 'Foster',
+    state: 'TX',
+    vertical: 'Medicare',
+    assets: '$100k–$250k',
+    phone: '(214) 555-0150',
+    status: 'Available',
+    date: hoursAgo(11),
   },
 ];
 
