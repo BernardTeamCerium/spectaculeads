@@ -44,11 +44,17 @@ const STEPS: Step[] = [
   },
 ];
 
+const AUTO_INTERVAL_MS = 4500;
+
 interface TourShape {
   active: boolean;
   index: number;
   total: number;
+  auto: boolean;
+  paused: boolean;
   start: () => void;
+  startAuto: () => void;
+  togglePause: () => void;
   next: () => void;
   prev: () => void;
   stop: () => void;
@@ -59,16 +65,31 @@ const TourContext = createContext<TourShape | null>(null);
 export function DemoTourProvider({ children }: { children: React.ReactNode }) {
   const [active, setActive] = useState(false);
   const [index, setIndex] = useState(0);
+  const [auto, setAuto] = useState(false);
+  const [paused, setPaused] = useState(false);
 
   const start = useCallback(() => {
+    setAuto(false);
+    setPaused(false);
     setIndex(0);
     setActive(true);
   }, []);
-  const stop = useCallback(() => setActive(false), []);
+  const startAuto = useCallback(() => {
+    setAuto(true);
+    setPaused(false);
+    setIndex(0);
+    setActive(true);
+  }, []);
+  const togglePause = useCallback(() => setPaused((p) => !p), []);
+  const stop = useCallback(() => {
+    setActive(false);
+    setAuto(false);
+  }, []);
   const next = useCallback(() => {
     setIndex((i) => {
       if (i >= STEPS.length - 1) {
         setActive(false);
+        setAuto(false);
         return i;
       }
       return i + 1;
@@ -76,9 +97,16 @@ export function DemoTourProvider({ children }: { children: React.ReactNode }) {
   }, []);
   const prev = useCallback(() => setIndex((i) => Math.max(0, i - 1)), []);
 
+  // Auto-play: advance on a timer while active, auto, and not paused.
+  useEffect(() => {
+    if (!active || !auto || paused) return;
+    const t = setTimeout(() => next(), AUTO_INTERVAL_MS);
+    return () => clearTimeout(t);
+  }, [active, auto, paused, index, next]);
+
   const value = useMemo<TourShape>(
-    () => ({ active, index, total: STEPS.length, start, next, prev, stop }),
-    [active, index, start, next, prev, stop]
+    () => ({ active, index, total: STEPS.length, auto, paused, start, startAuto, togglePause, next, prev, stop }),
+    [active, index, auto, paused, start, startAuto, togglePause, next, prev, stop]
   );
 
   return <TourContext.Provider value={value}>{children}</TourContext.Provider>;
@@ -92,7 +120,7 @@ export function useDemoTour(): TourShape {
 
 /** Floating instruction card that drives the walkthrough. Rendered once at root. */
 export function DemoTourOverlay() {
-  const { active, index, total, next, prev, stop } = useDemoTour();
+  const { active, index, total, auto, paused, next, prev, stop, togglePause } = useDemoTour();
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
@@ -112,11 +140,19 @@ export function DemoTourOverlay() {
         <View style={styles.header}>
           <View style={styles.badge}>
             <Ionicons name="sparkles" size={13} color={colors.navy} />
-            <Text style={styles.badgeText}>Guided demo</Text>
+            <Text style={styles.badgeText}>{auto ? 'Auto-play' : 'Guided demo'}</Text>
           </View>
-          <Pressable onPress={stop} hitSlop={10}>
-            <Text style={styles.skip}>Skip</Text>
-          </Pressable>
+          <View style={styles.headerRight}>
+            {auto && (
+              <Pressable onPress={togglePause} hitSlop={10} style={styles.pauseBtn}>
+                <Ionicons name={paused ? 'play' : 'pause'} size={14} color={colors.navy} />
+                <Text style={styles.pauseText}>{paused ? 'Resume' : 'Pause'}</Text>
+              </Pressable>
+            )}
+            <Pressable onPress={stop} hitSlop={10}>
+              <Text style={styles.skip}>Skip</Text>
+            </Pressable>
+          </View>
         </View>
 
         <Text style={styles.title}>{step.title}</Text>
@@ -167,6 +203,17 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  pauseBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.tealLight,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: radii.pill,
+  },
+  pauseText: { fontFamily: fonts.bodySemi, fontSize: 12, color: colors.navy },
   badge: {
     flexDirection: 'row',
     alignItems: 'center',

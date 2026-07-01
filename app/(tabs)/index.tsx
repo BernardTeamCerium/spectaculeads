@@ -16,6 +16,7 @@ import {
   StatusBadge,
   Wordmark,
 } from '../../src/components';
+import { useDemoTour } from '../../src/state/DemoTour';
 import { LEAD_STATUS_ORDER } from '../../src/types';
 import { colors, fonts, radii, spacing } from '../../src/theme';
 
@@ -33,6 +34,7 @@ const SWATCHES: { name: string; hex: string; dark?: boolean }[] = [
 export default function StylePreview() {
   const [slider, setSlider] = useState(60);
   const [activePill, setActivePill] = useState('Monthly');
+  const { start, startAuto } = useDemoTour();
 
   return (
     <Screen>
@@ -42,6 +44,16 @@ export default function StylePreview() {
         <View style={{ flex: 1 }}>
           <Wordmark />
           <Text style={styles.subtitle}>Design system preview</Text>
+        </View>
+      </View>
+
+      {/* Demo launcher */}
+      <View style={styles.demoCard}>
+        <Text style={styles.demoTitle}>See how it works</Text>
+        <Text style={styles.demoBody}>Take a guided walkthrough of the full advisor flow.</Text>
+        <View style={styles.demoBtns}>
+          <Button label="Guided tour" variant="teal" onPress={start} fullWidth={false} style={{ flex: 1 }} />
+          <Button label="Auto-play" variant="secondary" onPress={startAuto} fullWidth={false} style={{ flex: 1 }} />
         </View>
       </View>
 
@@ -161,9 +173,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    marginBottom: spacing.xl,
+    marginBottom: spacing.lg,
   },
   subtitle: { fontFamily: fonts.body, fontSize: 14, color: colors.muted, marginTop: 2 },
+  demoCard: {
+    backgroundColor: colors.indigo,
+    borderRadius: radii.xl,
+    padding: spacing.lg,
+    marginBottom: spacing.xl,
+  },
+  demoTitle: { fontFamily: fonts.heading, fontSize: 18, color: colors.white },
+  demoBody: { fontFamily: fonts.body, fontSize: 14, color: 'rgba(255,255,255,0.75)', marginTop: 4 },
+  demoBtns: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.lg },
   section: { marginTop: spacing.xl },
   logoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   swatchGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },

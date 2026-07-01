@@ -17,7 +17,7 @@ export default function Profile() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user, credits, licenses, submitLicense, verifyLicense, signOut, resetDemo } = useApp();
-  const { start } = useDemoTour();
+  const { start, startAuto } = useDemoTour();
 
   const [chosenFile, setChosenFile] = useState<string | null>(null);
 
@@ -139,6 +139,7 @@ export default function Profile() {
         <H2 style={styles.sectionHead}>Demo</H2>
         <Card style={{ gap: spacing.md }}>
           <Button label="Replay guided tour" variant="teal" onPress={start} />
+          <Button label="Auto-play tour" variant="primary" onPress={startAuto} />
           <Button label="Reset demo data" variant="secondary" onPress={resetDemo} />
           <Body muted style={{ fontSize: 12, textAlign: 'center' }}>
             Resets credits, leads, and progress to the starting state.
