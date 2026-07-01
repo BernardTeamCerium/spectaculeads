@@ -55,7 +55,19 @@ interface AppStateShape {
   licenses: License[];
   submitLicense: (input: { state: string; type: string; fileName: string }) => void;
   verifyLicense: (id: string) => void;
+
+  // demo
+  resetDemo: () => void;
 }
+
+const seedLicenses = (): License[] => [
+  {
+    id: 'lic_seed',
+    state: DEMO_ADVISOR.license.state,
+    type: DEMO_ADVISOR.license.type,
+    status: DEMO_ADVISOR.license.status === 'verified' ? 'verified' : 'pending',
+  },
+];
 
 
 const AppStateContext = createContext<AppStateShape | null>(null);
@@ -67,14 +79,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [leads, setLeads] = useState<Lead[]>(SAMPLE_LEADS);
   const [planInputs, setPlanInputsState] = useState<PlanInputs>(DEFAULT_PLAN_INPUTS);
   const [planComplete, setPlanComplete] = useState(false);
-  const [licenses, setLicenses] = useState<License[]>([
-    {
-      id: 'lic_seed',
-      state: DEMO_ADVISOR.license.state,
-      type: DEMO_ADVISOR.license.type,
-      status: DEMO_ADVISOR.license.status === 'verified' ? 'verified' : 'pending',
-    },
-  ]);
+  const [licenses, setLicenses] = useState<License[]>(seedLicenses);
   const [user, setUser] = useState<UserProfile>({
     name: DEMO_ADVISOR.name,
     email: DEMO_ADVISOR.email,
@@ -169,6 +174,16 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     );
   }, []);
 
+  /** Restore the whole demo to its starting state (for repeatable walkthroughs). */
+  const resetDemo = useCallback(() => {
+    setCredits(DEMO_ADVISOR.credits);
+    setTransactions([]);
+    setLeads(SAMPLE_LEADS);
+    setPlanInputsState(DEFAULT_PLAN_INPUTS);
+    setPlanComplete(false);
+    setLicenses(seedLicenses());
+  }, []);
+
   const planResults = useMemo(() => computePlan(planInputs), [planInputs]);
 
   const value = useMemo<AppStateShape>(
@@ -193,6 +208,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       licenses,
       submitLicense,
       verifyLicense,
+      resetDemo,
     }),
     [
       signedIn,
@@ -214,6 +230,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       licenses,
       submitLicense,
       verifyLicense,
+      resetDemo,
     ]
   );
 

@@ -100,7 +100,7 @@ export default function Checkout() {
           </View>
         </View>
 
-        {/* Payment form (mock) */}
+        {/* Payment form (mock) — pre-filled with a demo card so you can just tap Pay */}
         <Text style={styles.formTitle}>Payment details</Text>
         <View style={styles.field}>
           <Text style={styles.fieldLabel}>Card number</Text>
@@ -108,7 +108,7 @@ export default function Checkout() {
             <Ionicons name="card-outline" size={20} color={colors.muted} />
             <TextInput
               style={styles.input}
-              placeholder="4242 4242 4242 4242"
+              defaultValue="4242 4242 4242 4242"
               placeholderTextColor={colors.muted}
               keyboardType="number-pad"
             />
@@ -117,11 +117,11 @@ export default function Checkout() {
         <View style={styles.fieldRow}>
           <View style={[styles.field, { flex: 1 }]}>
             <Text style={styles.fieldLabel}>Expiry</Text>
-            <TextInput style={styles.inputPlain} placeholder="12/28" placeholderTextColor={colors.muted} />
+            <TextInput style={styles.inputPlain} defaultValue="12/28" placeholderTextColor={colors.muted} />
           </View>
           <View style={[styles.field, { flex: 1 }]}>
             <Text style={styles.fieldLabel}>CVC</Text>
-            <TextInput style={styles.inputPlain} placeholder="123" placeholderTextColor={colors.muted} keyboardType="number-pad" />
+            <TextInput style={styles.inputPlain} defaultValue="123" placeholderTextColor={colors.muted} keyboardType="number-pad" />
           </View>
         </View>
 

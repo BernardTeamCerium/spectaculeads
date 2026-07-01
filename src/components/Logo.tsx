@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 import { StyleSheet, Text, View, ViewStyle } from 'react-native';
 import Svg, { Defs, LinearGradient, Stop, Text as SvgText, TSpan } from 'react-native-svg';
 import { colors, fonts } from '../theme';
@@ -9,6 +9,9 @@ import { colors, fonts } from '../theme';
  */
 export function LogoMark({ size = 64, style }: { size?: number; style?: ViewStyle }) {
   const fontSize = size * 0.52;
+  // Unique gradient id per instance — a shared id breaks fill="url(#…)" on web
+  // when multiple marks are mounted (e.g. across screen transitions).
+  const gradId = `slTeal-${useId().replace(/:/g, '')}`;
   return (
     <View
       style={[
@@ -19,7 +22,7 @@ export function LogoMark({ size = 64, style }: { size?: number; style?: ViewStyl
     >
       <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         <Defs>
-          <LinearGradient id="slTeal" x1="0" y1="0" x2="1" y2="1">
+          <LinearGradient id={gradId} x1="0" y1="0" x2="1" y2="1">
             <Stop offset="0" stopColor={colors.tealDeep} />
             <Stop offset="0.55" stopColor={colors.teal} />
             <Stop offset="1" stopColor={colors.tealLight} />
@@ -33,7 +36,7 @@ export function LogoMark({ size = 64, style }: { size?: number; style?: ViewStyl
           fontWeight="700"
           fontSize={fontSize}
         >
-          <TSpan fill="url(#slTeal)">S</TSpan>
+          <TSpan fill={`url(#${gradId})`}>S</TSpan>
           <TSpan fill={colors.white}>L</TSpan>
         </SvgText>
       </Svg>

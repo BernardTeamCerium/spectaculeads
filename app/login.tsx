@@ -14,11 +14,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../src/components/Button';
 import { LogoMark } from '../src/components/Logo';
 import { useApp } from '../src/state/AppState';
+import { useDemoTour } from '../src/state/DemoTour';
 import { colors, fonts, radii, spacing } from '../src/theme';
 
 export default function Login() {
   const router = useRouter();
   const { signIn } = useApp();
+  const { start } = useDemoTour();
   const insets = useSafeAreaInsets();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -27,6 +29,11 @@ export default function Login() {
     signIn(email);
     // Fake auth: land new arrivals on the Income by Design welcome.
     router.replace('/income');
+  };
+
+  const onGuidedTour = () => {
+    signIn(email);
+    start(); // overlay drives navigation from here
   };
 
   return (
@@ -76,6 +83,10 @@ export default function Login() {
           </Pressable>
 
           <Button label="Sign in" variant="teal" onPress={onSignIn} style={{ marginTop: spacing.lg }} />
+
+          <Pressable onPress={onGuidedTour} style={styles.tourBtn}>
+            <Text style={styles.tourText}>▶  Take the 60-second guided tour</Text>
+          </Pressable>
 
           <Text style={styles.demoNote}>Demo mode — any details will sign you in.</Text>
         </View>
@@ -132,6 +143,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.tealLight,
   },
+  tourBtn: { alignSelf: 'center', marginTop: spacing.lg, paddingVertical: 8 },
+  tourText: { fontFamily: fonts.bodySemi, fontSize: 14, color: colors.tealLight },
   demoNote: {
     fontFamily: fonts.body,
     fontSize: 12,

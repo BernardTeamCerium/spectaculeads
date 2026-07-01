@@ -17,6 +17,7 @@ import { useEffect } from 'react';
 import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppStateProvider } from '../src/state/AppState';
+import { DemoTourOverlay, DemoTourProvider } from '../src/state/DemoTour';
 import { colors } from '../src/theme';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -49,22 +50,25 @@ export default function RootLayout() {
   const app = (
     <SafeAreaProvider>
       <AppStateProvider>
-        <StatusBar style="light" />
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: colors.lightBg },
-            animation: 'slide_from_right',
-            animationDuration: 220,
-          }}
-        >
-          <Stack.Screen name="index" options={{ animation: 'fade' }} />
-          <Stack.Screen name="login" options={{ animation: 'fade' }} />
-          <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
-          <Stack.Screen name="income" options={{ animation: 'slide_from_bottom' }} />
-          <Stack.Screen name="lead/[id]" options={{ animation: 'slide_from_right' }} />
-          <Stack.Screen name="checkout" options={{ presentation: 'modal' }} />
-        </Stack>
+        <DemoTourProvider>
+          <StatusBar style="light" />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: colors.lightBg },
+              animation: 'slide_from_right',
+              animationDuration: 220,
+            }}
+          >
+            <Stack.Screen name="index" options={{ animation: 'fade' }} />
+            <Stack.Screen name="login" options={{ animation: 'fade' }} />
+            <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
+            <Stack.Screen name="income" options={{ animation: 'slide_from_bottom' }} />
+            <Stack.Screen name="lead/[id]" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="checkout" options={{ presentation: 'modal' }} />
+          </Stack>
+          <DemoTourOverlay />
+        </DemoTourProvider>
       </AppStateProvider>
     </SafeAreaProvider>
   );

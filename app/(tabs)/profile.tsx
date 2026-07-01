@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../../src/components/Button';
 import { Body, Card, Divider, Eyebrow, H2 } from '../../src/components/ui';
 import { useApp } from '../../src/state/AppState';
+import { useDemoTour } from '../../src/state/DemoTour';
 import { License } from '../../src/types';
 import { colors, fonts, radii, spacing } from '../../src/theme';
 import { timeAgo } from '../../src/utils/format';
@@ -15,7 +16,8 @@ const MOCK_FILE_NAME = 'CA_Life-Health_License.pdf';
 export default function Profile() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { user, credits, licenses, submitLicense, verifyLicense, signOut } = useApp();
+  const { user, credits, licenses, submitLicense, verifyLicense, signOut, resetDemo } = useApp();
+  const { start } = useDemoTour();
 
   const [chosenFile, setChosenFile] = useState<string | null>(null);
 
@@ -131,6 +133,16 @@ export default function Profile() {
           <SettingRow icon="notifications-outline" label="Notifications" />
           <Divider style={{ marginVertical: spacing.sm }} />
           <SettingRow icon="help-circle-outline" label="Help & support" />
+        </Card>
+
+        {/* Demo controls */}
+        <H2 style={styles.sectionHead}>Demo</H2>
+        <Card style={{ gap: spacing.md }}>
+          <Button label="Replay guided tour" variant="teal" onPress={start} />
+          <Button label="Reset demo data" variant="secondary" onPress={resetDemo} />
+          <Body muted style={{ fontSize: 12, textAlign: 'center' }}>
+            Resets credits, leads, and progress to the starting state.
+          </Body>
         </Card>
 
         <Button
