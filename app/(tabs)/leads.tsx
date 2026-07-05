@@ -90,7 +90,7 @@ export default function Leads() {
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.filterRow}
-        style={{ flexGrow: 0, marginTop: spacing.md }}
+        style={{ flexGrow: 0, flexShrink: 0, marginTop: spacing.md }}
       >
         {FILTERS.map((f) => {
           const active = f === filter;
@@ -101,7 +101,7 @@ export default function Leads() {
               onPress={() => setFilter(f)}
               style={[styles.chip, active ? styles.chipActive : styles.chipIdle]}
             >
-              <Text style={[styles.chipText, active && { color: colors.white }]}>
+              <Text numberOfLines={1} style={[styles.chipText, active && { color: colors.white }]}>
                 {f} {count > 0 ? `· ${count}` : ''}
               </Text>
             </Pressable>
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
   },
   searchInput: { flex: 1, fontFamily: fonts.body, fontSize: 15, color: colors.text },
-  filterRow: { paddingHorizontal: spacing.lg, gap: spacing.sm },
+  filterRow: { paddingHorizontal: spacing.lg, gap: spacing.sm, alignItems: 'center' },
   chip: {
     paddingHorizontal: 14,
     paddingVertical: 9,

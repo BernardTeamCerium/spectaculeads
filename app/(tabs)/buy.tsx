@@ -51,8 +51,10 @@ export default function Buy() {
               ]}
             >
               {pkg.highlight && (
-                <View style={styles.ribbon}>
-                  <Text style={styles.ribbonText}>BEST VALUE</Text>
+                <View style={styles.ribbonRow}>
+                  <View style={styles.ribbon}>
+                    <Text style={styles.ribbonText}>BEST VALUE</Text>
+                  </View>
                 </View>
               )}
               <View style={styles.cardTop}>
@@ -160,10 +162,9 @@ const styles = StyleSheet.create({
   },
   cardHighlight: { backgroundColor: colors.indigo, borderColor: colors.indigo },
   pressed: { opacity: 0.92, transform: [{ scale: 0.995 }] },
+  ribbonRow: { flexDirection: 'row', marginBottom: spacing.md },
   ribbon: {
-    position: 'absolute',
-    top: 16,
-    right: 16,
+    alignSelf: 'flex-start',
     backgroundColor: colors.teal,
     paddingHorizontal: 10,
     paddingVertical: 4,
