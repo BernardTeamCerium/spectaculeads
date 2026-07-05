@@ -98,6 +98,7 @@ export const SAMPLE_LEADS: Lead[] = [
     status: 'Appointment Set',
     notes: 'Booked Zoom for Friday 11am. Wants to understand cash value growth.',
     date: hoursAgo(27),
+    closedAmount: 2400,
   },
   {
     id: 'l5',
@@ -144,6 +145,7 @@ export const SAMPLE_LEADS: Lead[] = [
     status: 'Appointment Set',
     notes: 'In-person meeting set for next Tuesday.',
     date: hoursAgo(58),
+    closedAmount: 3600,
   },
   {
     id: 'l9',
@@ -190,6 +192,7 @@ export const SAMPLE_LEADS: Lead[] = [
     status: 'Appointment Set',
     notes: 'Referred by an existing client. Very engaged.',
     date: hoursAgo(98),
+    closedAmount: 2800,
   },
   {
     id: 'l13',

@@ -17,17 +17,20 @@ import { fullName, initials } from '../../src/data/mock';
 import { useApp } from '../../src/state/AppState';
 import { LEAD_STATUS_ORDER, LeadStatus } from '../../src/types';
 import { colors, fonts, radii, spacing } from '../../src/theme';
-import { timeAgo } from '../../src/utils/format';
+import { money, timeAgo } from '../../src/utils/format';
 
 export default function LeadDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { leads, updateLeadStatus, updateLeadNotes } = useApp();
+  const { leads, updateLeadStatus, updateLeadNotes, setLeadClosed } = useApp();
 
   const lead = leads.find((l) => l.id === id);
   const [noteDraft, setNoteDraft] = useState(lead?.notes ?? '');
   const [saved, setSaved] = useState(false);
+  const [amountDraft, setAmountDraft] = useState(
+    lead?.closedAmount ? String(lead.closedAmount) : ''
+  );
 
   if (!lead) {
     return (
@@ -46,6 +49,15 @@ export default function LeadDetail() {
     updateLeadNotes(lead.id, noteDraft);
     setSaved(true);
     setTimeout(() => setSaved(false), 1800);
+  };
+
+  const logClosed = () => {
+    const amount = parseFloat(amountDraft.replace(/[^0-9.]/g, ''));
+    setLeadClosed(lead.id, Number.isFinite(amount) ? amount : undefined);
+  };
+  const clearClosed = () => {
+    setLeadClosed(lead.id, undefined);
+    setAmountDraft('');
   };
 
   return (
@@ -139,6 +151,48 @@ export default function LeadDetail() {
             <Text style={styles.tapHint}>Tap a stage to update this lead.</Text>
           </Card>
 
+          {/* Deal outcome — actual closed commission */}
+          <Text style={styles.sectionTitle}>Deal outcome</Text>
+          <Card>
+            {lead.closedAmount ? (
+              <View style={styles.closedRow}>
+                <View style={styles.closedIcon}>
+                  <Ionicons name="checkmark-done" size={20} color="#1E8A55" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.closedLabel}>Closed / won</Text>
+                  <Text style={styles.closedAmount}>{money(lead.closedAmount)} commission</Text>
+                </View>
+                <Pressable onPress={clearClosed} hitSlop={8}>
+                  <Text style={styles.clearLink}>Clear</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <>
+                <Text style={styles.dealHint}>Log the actual commission when this deal closes.</Text>
+                <View style={styles.amountRow}>
+                  <View style={styles.amountInputWrap}>
+                    <Text style={styles.dollar}>$</Text>
+                    <TextInput
+                      style={styles.amountInput}
+                      placeholder="0"
+                      placeholderTextColor={colors.muted}
+                      keyboardType="decimal-pad"
+                      value={amountDraft}
+                      onChangeText={setAmountDraft}
+                    />
+                  </View>
+                  <Pressable
+                    onPress={logClosed}
+                    style={[styles.logBtn, !amountDraft && styles.logBtnDisabled]}
+                  >
+                    <Text style={styles.logText}>Mark won</Text>
+                  </Pressable>
+                </View>
+              </>
+            )}
+          </Card>
+
           {/* Notes */}
           <Text style={styles.sectionTitle}>Notes</Text>
           <Card>
@@ -190,6 +244,43 @@ function Meta({ label, value }: { label: string; value: string }) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.navy },
+  dealHint: { fontFamily: fonts.body, fontSize: 14, color: colors.muted, marginBottom: spacing.md },
+  amountRow: { flexDirection: 'row', gap: spacing.md, alignItems: 'center' },
+  amountInputWrap: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.lightBg,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+    height: 48,
+  },
+  dollar: { fontFamily: fonts.bodySemi, fontSize: 16, color: colors.muted, marginRight: 4 },
+  amountInput: { flex: 1, fontFamily: fonts.body, fontSize: 16, color: colors.text },
+  logBtn: {
+    backgroundColor: colors.indigo,
+    paddingHorizontal: 18,
+    height: 48,
+    borderRadius: radii.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logBtnDisabled: { opacity: 0.5 },
+  logText: { fontFamily: fonts.bodySemi, fontSize: 14, color: colors.white },
+  closedRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  closedIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(52,199,123,0.14)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  closedLabel: { fontFamily: fonts.body, fontSize: 13, color: colors.muted },
+  closedAmount: { fontFamily: fonts.headingSemi, fontSize: 18, color: colors.text, marginTop: 1 },
+  clearLink: { fontFamily: fonts.bodySemi, fontSize: 13, color: colors.danger },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

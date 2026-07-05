@@ -44,6 +44,7 @@ interface AppStateShape {
   leads: Lead[];
   updateLeadStatus: (id: string, status: LeadStatus) => void;
   updateLeadNotes: (id: string, notes: string) => void;
+  setLeadClosed: (id: string, amount: number | undefined) => void;
 
   // plan
   planInputs: PlanInputs;
@@ -153,6 +154,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, notes } : l)));
   }, []);
 
+  /** Record (or clear, with undefined/0) the actual commission booked on a lead. */
+  const setLeadClosed = useCallback((id: string, amount: number | undefined) => {
+    const cleaned = amount && amount > 0 ? amount : undefined;
+    setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, closedAmount: cleaned } : l)));
+  }, []);
+
   const setPlanInputs = useCallback((p: Partial<PlanInputs>) => {
     setPlanInputsState((prev) => ({ ...prev, ...p }));
   }, []);
@@ -207,6 +214,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       leads,
       updateLeadStatus,
       updateLeadNotes,
+      setLeadClosed,
       planInputs,
       setPlanInputs,
       planResults,
@@ -231,6 +239,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       leads,
       updateLeadStatus,
       updateLeadNotes,
+      setLeadClosed,
       planInputs,
       setPlanInputs,
       planResults,

@@ -24,19 +24,21 @@ const STATUS_META: { status: LeadStatus; label: string; color: string }[] = [
 
 export default function Home() {
   const router = useRouter();
-  const { user, credits, leads, planInputs, planResults } = useApp();
+  const { user, credits, leads, planResults } = useApp();
 
   const firstName = user.name.split(' ')[0];
   const counts = (s: LeadStatus) => leads.filter((l) => l.status === s).length;
   const total = leads.length;
-  const converted = counts('Appointment Set');
   const worked = leads.filter((l) => l.status !== 'Available').length;
-  const convRate = total > 0 ? Math.round((converted / total) * 100) : 0;
 
-  // Progress toward the income goal, derived from converted leads.
+  // Actual closed revenue: sum of commissions booked on won deals.
+  const closedDeals = leads.filter((l) => (l.closedAmount ?? 0) > 0);
+  const closedCount = closedDeals.length;
+  const closedRevenue = closedDeals.reduce((sum, l) => sum + (l.closedAmount ?? 0), 0);
+
+  // Progress toward the income goal, from real closed dollars.
   const goal = planResults.projectedIncome;
-  const earned = converted * planInputs.avgCommission;
-  const pct = goal > 0 ? Math.min(100, Math.round((earned / goal) * 100)) : 0;
+  const pct = goal > 0 ? Math.min(100, Math.round((closedRevenue / goal) * 100)) : 0;
   const recent = leads.slice(0, 3);
 
   return (
@@ -62,17 +64,17 @@ export default function Home() {
           </Pressable>
         </View>
         <Text style={styles.goalMoney}>
-          {money(earned)} <Text style={styles.goalOf}>of {money(goal)}</Text>
+          {money(closedRevenue)} <Text style={styles.goalOf}>of {money(goal)}</Text>
         </Text>
         <View style={styles.barTrack}>
           <View style={[styles.barFill, { width: `${Math.max(pct, 2)}%` }]} />
         </View>
-        <Text style={styles.goalPct}>{pct}% to your annual income goal</Text>
+        <Text style={styles.goalPct}>{pct}% of your goal — closed commission</Text>
 
         <View style={styles.goalStats}>
           <View style={styles.goalStat}>
             <Text style={styles.goalStatValue}>
-              {converted}
+              {closedCount}
               <Text style={styles.goalStatOf}> / {planResults.dealsNeeded}</Text>
             </Text>
             <Text style={styles.goalStatLabel}>deals closed</Text>
@@ -102,8 +104,8 @@ export default function Home() {
           <Text style={styles.bigStatLabel}>total leads</Text>
         </Card>
         <Card style={styles.bigStat}>
-          <Text style={[styles.bigStatValue, { color: colors.success }]}>{converted}</Text>
-          <Text style={styles.bigStatLabel}>converted · {convRate}%</Text>
+          <Text style={[styles.bigStatValue, { color: colors.success }]}>{money(closedRevenue)}</Text>
+          <Text style={styles.bigStatLabel}>closed · {closedCount} deals</Text>
         </Card>
       </View>
 

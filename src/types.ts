@@ -29,6 +29,7 @@ export interface Lead {
   status: LeadStatus;
   notes?: string;
   date: string; // ISO date the lead was received
+  closedAmount?: number; // actual commission booked when this deal closed (won)
 }
 
 export type LicenseStatus = 'none' | 'pending' | 'verified';
