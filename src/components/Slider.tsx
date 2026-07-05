@@ -24,18 +24,21 @@ export function Slider({ value, min, max, step = 1, onChange }: Props) {
   const [width, setWidth] = useState(0);
   const widthRef = useRef(0);
 
-  const clampToStep = (raw: number) => {
-    const clamped = Math.min(max, Math.max(min, raw));
-    const stepped = Math.round((clamped - min) / step) * step + min;
-    return Math.min(max, Math.max(min, stepped));
-  };
-
   const setFromX = (x: number) => {
     const w = widthRef.current;
     if (w <= 0) return;
     const ratio = Math.min(1, Math.max(0, x / w));
-    onChange(clampToStep(min + ratio * (max - min)));
+    const clamped = Math.min(max, Math.max(min, min + ratio * (max - min)));
+    const stepped = Math.round((clamped - min) / step) * step + min;
+    onChange(Math.min(max, Math.max(min, stepped)));
   };
+
+  // Keep the latest handler in a ref so the once-created PanResponder always
+  // uses the current step's min/max/onChange (the Slider instance is reused
+  // across the wizard steps — capturing the first render's closure would make
+  // later steps silently drag the wrong value).
+  const setFromXRef = useRef(setFromX);
+  setFromXRef.current = setFromX;
 
   const onLayout = (e: LayoutChangeEvent) => {
     const w = e.nativeEvent.layout.width;
@@ -47,8 +50,8 @@ export function Slider({ value, min, max, step = 1, onChange }: Props) {
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: (e: GestureResponderEvent) => setFromX(e.nativeEvent.locationX),
-      onPanResponderMove: (e: GestureResponderEvent) => setFromX(e.nativeEvent.locationX),
+      onPanResponderGrant: (e: GestureResponderEvent) => setFromXRef.current(e.nativeEvent.locationX),
+      onPanResponderMove: (e: GestureResponderEvent) => setFromXRef.current(e.nativeEvent.locationX),
     })
   ).current;
 

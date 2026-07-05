@@ -31,6 +31,7 @@ interface AppStateShape {
 
   // profile
   user: UserProfile;
+  updateUser: (partial: Partial<UserProfile>) => void;
 
   // credits
   credits: number;
@@ -104,6 +105,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     setSignedIn(false);
     setPlanComplete(false);
   }, []);
+
+  const updateUser = useCallback(
+    (partial: Partial<UserProfile>) => setUser((u) => ({ ...u, ...partial })),
+    []
+  );
 
   const addCredits = useCallback((n: number) => setCredits((c) => c + n), []);
 
@@ -192,6 +198,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       signIn,
       signOut,
       user,
+      updateUser,
       credits,
       transactions,
       addCredits,
@@ -215,6 +222,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       signIn,
       signOut,
       user,
+      updateUser,
       credits,
       transactions,
       addCredits,

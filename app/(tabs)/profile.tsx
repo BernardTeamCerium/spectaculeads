@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../../src/components/Button';
 import { Body, Card, Divider, Eyebrow, H2 } from '../../src/components/ui';
@@ -16,16 +16,38 @@ const MOCK_FILE_NAME = 'CA_Life-Health_License.pdf';
 export default function Profile() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { user, credits, licenses, submitLicense, verifyLicense, signOut, resetDemo } = useApp();
+  const { user, updateUser, credits, licenses, submitLicense, verifyLicense, signOut, resetDemo } =
+    useApp();
   const { start, startAuto } = useDemoTour();
 
   const [chosenFile, setChosenFile] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(user);
+  const [licenseType, setLicenseType] = useState('Life & Health');
 
   const initials = user.name.split(' ').map((n) => n[0]).join('');
 
+  const startEdit = () => {
+    setDraft(user);
+    setEditing(true);
+  };
+  const saveEdit = () => {
+    updateUser({
+      name: draft.name.trim() || user.name,
+      email: draft.email.trim(),
+      company: draft.company.trim(),
+      licenseState: draft.licenseState.trim().toUpperCase(),
+    });
+    setEditing(false);
+  };
+
   const onSubmitLicense = () => {
     if (!chosenFile) return;
-    submitLicense({ state: user.licenseState, type: 'Life & Health', fileName: chosenFile });
+    submitLicense({
+      state: user.licenseState,
+      type: licenseType.trim() || 'Life & Health',
+      fileName: chosenFile,
+    });
     setChosenFile(null);
   };
 
@@ -47,23 +69,46 @@ export default function Profile() {
         <Eyebrow>Profile</Eyebrow>
 
         {/* Advisor info card */}
-        <Card style={styles.infoCard}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initials}</Text>
-          </View>
-          <Text style={styles.name}>{user.name}</Text>
-          <Text style={styles.email}>{user.email}</Text>
-          <View style={styles.infoMetaRow}>
-            <View style={styles.infoMeta}>
-              <Ionicons name="business-outline" size={14} color={colors.muted} />
-              <Text style={styles.infoMetaText}>{user.company}</Text>
+        {editing ? (
+          <Card>
+            <View style={styles.editHeader}>
+              <View style={[styles.avatar, styles.avatarSmall]}>
+                <Text style={styles.avatarTextSmall}>{initials}</Text>
+              </View>
+              <H2>Your information</H2>
             </View>
-            <View style={styles.infoMeta}>
-              <Ionicons name="location-outline" size={14} color={colors.muted} />
-              <Text style={styles.infoMetaText}>{user.licenseState}</Text>
+            <Field label="Full name" value={draft.name} onChangeText={(t) => setDraft({ ...draft, name: t })} placeholder="Alex Rivera" />
+            <Field label="Email" value={draft.email} onChangeText={(t) => setDraft({ ...draft, email: t })} placeholder="you@advisory.com" keyboardType="email-address" />
+            <Field label="Company" value={draft.company} onChangeText={(t) => setDraft({ ...draft, company: t })} placeholder="Rivera Financial" />
+            <Field label="Location (state)" value={draft.licenseState} onChangeText={(t) => setDraft({ ...draft, licenseState: t })} placeholder="CA" autoCapitalize="characters" maxLength={2} />
+            <View style={styles.editBtns}>
+              <Button label="Cancel" variant="secondary" onPress={() => setEditing(false)} fullWidth={false} style={{ flex: 1 }} />
+              <Button label="Save" variant="teal" onPress={saveEdit} fullWidth={false} style={{ flex: 1 }} />
             </View>
-          </View>
-        </Card>
+          </Card>
+        ) : (
+          <Card style={styles.infoCard}>
+            <Pressable onPress={startEdit} style={styles.editBtn} hitSlop={8}>
+              <Ionicons name="create-outline" size={18} color={colors.indigo} />
+              <Text style={styles.editText}>Edit</Text>
+            </Pressable>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{initials}</Text>
+            </View>
+            <Text style={styles.name}>{user.name}</Text>
+            <Text style={styles.email}>{user.email}</Text>
+            <View style={styles.infoMetaRow}>
+              <View style={styles.infoMeta}>
+                <Ionicons name="business-outline" size={14} color={colors.muted} />
+                <Text style={styles.infoMetaText}>{user.company}</Text>
+              </View>
+              <View style={styles.infoMeta}>
+                <Ionicons name="location-outline" size={14} color={colors.muted} />
+                <Text style={styles.infoMetaText}>{user.licenseState}</Text>
+              </View>
+            </View>
+          </Card>
+        )}
 
         {/* Credits remaining */}
         <Card style={styles.creditCard}>
@@ -82,6 +127,15 @@ export default function Profile() {
         {/* Submit a license */}
         <H2 style={styles.sectionHead}>Submit a license</H2>
         <Card>
+          <Field
+            label="License type"
+            value={licenseType}
+            onChangeText={setLicenseType}
+            placeholder="Life & Health"
+          />
+          <Text style={styles.licenseStateHint}>
+            For {user.licenseState} · change your state above under Edit.
+          </Text>
           {chosenFile ? (
             <View style={styles.fileChosen}>
               <Ionicons name="document-text-outline" size={22} color={colors.indigo} />
@@ -158,6 +212,40 @@ export default function Profile() {
   );
 }
 
+function Field({
+  label,
+  value,
+  onChangeText,
+  placeholder,
+  keyboardType,
+  autoCapitalize,
+  maxLength,
+}: {
+  label: string;
+  value: string;
+  onChangeText: (t: string) => void;
+  placeholder?: string;
+  keyboardType?: 'default' | 'email-address';
+  autoCapitalize?: 'none' | 'characters' | 'sentences';
+  maxLength?: number;
+}) {
+  return (
+    <View style={styles.field}>
+      <Text style={styles.fieldLabel}>{label}</Text>
+      <TextInput
+        style={styles.fieldInput}
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        placeholderTextColor={colors.muted}
+        keyboardType={keyboardType}
+        autoCapitalize={autoCapitalize}
+        maxLength={maxLength}
+      />
+    </View>
+  );
+}
+
 function LicenseRow({ license, onVerify }: { license: License; onVerify: () => void }) {
   const verified = license.status === 'verified';
   return (
@@ -209,6 +297,40 @@ function SettingRow({ icon, label }: { icon: any; label: string }) {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.lightBg },
   infoCard: { alignItems: 'center', marginTop: spacing.md },
+  editBtn: {
+    position: 'absolute',
+    top: spacing.md,
+    right: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    zIndex: 1,
+  },
+  editText: { fontFamily: fonts.bodySemi, fontSize: 13, color: colors.indigo },
+  editHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.md },
+  avatarSmall: { width: 44, height: 44, borderRadius: 22 },
+  avatarTextSmall: { fontFamily: fonts.heading, fontSize: 18, color: colors.white },
+  editBtns: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.md },
+  field: { marginTop: spacing.md },
+  fieldLabel: { fontFamily: fonts.bodyMedium, fontSize: 13, color: colors.muted, marginBottom: 6 },
+  fieldInput: {
+    backgroundColor: colors.lightBg,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+    height: 48,
+    fontFamily: fonts.body,
+    fontSize: 15,
+    color: colors.text,
+  },
+  licenseStateHint: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.muted,
+    marginTop: spacing.sm,
+    marginBottom: spacing.xs,
+  },
   avatar: {
     width: 84,
     height: 84,
