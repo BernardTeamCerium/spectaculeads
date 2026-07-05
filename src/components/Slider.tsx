@@ -14,13 +14,14 @@ interface Props {
   max: number;
   step?: number;
   onChange: (value: number) => void;
+  trackColor?: string;
 }
 
 /**
  * Lightweight draggable slider built on PanResponder so we don't pull in
  * an external slider package. Works on web + native.
  */
-export function Slider({ value, min, max, step = 1, onChange }: Props) {
+export function Slider({ value, min, max, step = 1, onChange, trackColor }: Props) {
   const [width, setWidth] = useState(0);
   const widthRef = useRef(0);
 
@@ -64,7 +65,7 @@ export function Slider({ value, min, max, step = 1, onChange }: Props) {
       onLayout={onLayout}
       {...panResponder.panHandlers}
     >
-      <View style={styles.track} />
+      <View style={[styles.track, trackColor ? { backgroundColor: trackColor } : null]} />
       <View style={[styles.fill, { width: fillWidth }]} />
       <View
         style={[
