@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../src/components/Button';
+import { LoginBackground } from '../src/components/LoginBackground';
 import { LogoMark } from '../src/components/Logo';
 import { useApp } from '../src/state/AppState';
 import { useDemoTour } from '../src/state/DemoTour';
@@ -24,6 +25,7 @@ export default function Login() {
   const insets = useSafeAreaInsets();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [forgotNote, setForgotNote] = useState(false);
 
   const onSignIn = () => {
     signIn(email);
@@ -41,6 +43,7 @@ export default function Login() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <LoginBackground />
       <ScrollView
         contentContainerStyle={[
           styles.content,
@@ -78,9 +81,14 @@ export default function Login() {
             onChangeText={setPassword}
           />
 
-          <Pressable style={styles.forgot}>
+          <Pressable style={styles.forgot} onPress={() => setForgotNote(true)}>
             <Text style={styles.forgotText}>Forgot password?</Text>
           </Pressable>
+          {forgotNote && (
+            <Text style={styles.forgotNote}>
+              No password needed — this is a demo. Just tap “Sign in”.
+            </Text>
+          )}
 
           <Button label="Sign in" variant="teal" onPress={onSignIn} style={{ marginTop: spacing.lg }} />
 
@@ -142,6 +150,13 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bodyMedium,
     fontSize: 13,
     color: colors.tealLight,
+  },
+  forgotNote: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.6)',
+    textAlign: 'right',
+    marginTop: 6,
   },
   tourBtn: { alignSelf: 'center', marginTop: spacing.lg, paddingVertical: 8 },
   tourText: { fontFamily: fonts.bodySemi, fontSize: 14, color: colors.tealLight },
