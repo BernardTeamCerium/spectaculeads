@@ -1,0 +1,18 @@
+# Netlify build config — auto-deploys the Expo web export on push.
+# (For manual "drag the dist folder" deploys this file is ignored; the SPA
+#  fallback still works via public/_redirects, which ships inside dist.)
+
+[build]
+  command = "npx expo export --platform web"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# SPA fallback for client-side routes (deep links / refresh).
+# Static files (the app's routes and /demo) are served first; anything else
+# falls through to the app shell.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

@@ -16,6 +16,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { InstallHint } from '../src/components/InstallHint';
 import { AppStateProvider } from '../src/state/AppState';
 import { DemoTourOverlay, DemoTourProvider } from '../src/state/DemoTour';
 import { colors } from '../src/theme';
@@ -67,6 +68,7 @@ export default function RootLayout() {
             <Stack.Screen name="lead/[id]" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="checkout" options={{ presentation: 'modal' }} />
           </Stack>
+          <InstallHint />
           <DemoTourOverlay />
         </DemoTourProvider>
       </AppStateProvider>
