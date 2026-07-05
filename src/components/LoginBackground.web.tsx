@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react';
 
 /**
- * Login backdrop (web): an animated "constellation" of teal nodes drifting over
- * the navy ground, with links that brighten near the pointer. Canvas-based for
- * smooth 60fps; pointer-reactive so it feels alive. Purely decorative
- * (pointerEvents none) — remove <LoginBackground /> to drop it entirely.
+ * Login backdrop (web): "aurora ribbons" — soft, layered teal waves that flow
+ * across the lower half of the navy screen. Canvas-based with a blur + additive
+ * blend for a calm, premium glow. Decorative (pointerEvents none); remove
+ * <LoginBackground /> to drop it. Native uses a static glow fallback.
  */
 export function LoginBackground() {
   const ref = useRef<HTMLCanvasElement | null>(null);
@@ -20,8 +20,6 @@ export function LoginBackground() {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let W = 0;
     let H = 0;
-    let pts: { x: number; y: number; vx: number; vy: number }[] = [];
-    const mouse = { x: -9999, y: -9999 };
 
     const resize = () => {
       const r = parent.getBoundingClientRect();
@@ -30,91 +28,63 @@ export function LoginBackground() {
       canvas.width = Math.max(1, Math.floor(W * DPR));
       canvas.height = Math.max(1, Math.floor(H * DPR));
       ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-      const target = Math.min(64, Math.max(28, Math.floor((W * H) / 16000)));
-      pts = Array.from({ length: target }, () => ({
-        x: Math.random() * W,
-        y: Math.random() * H,
-        vx: (Math.random() - 0.5) * 0.28,
-        vy: (Math.random() - 0.5) * 0.28,
-      }));
     };
     resize();
-
-    const onMove = (e: MouseEvent) => {
-      const r = canvas.getBoundingClientRect();
-      mouse.x = e.clientX - r.left;
-      mouse.y = e.clientY - r.top;
-    };
-    const onLeave = () => {
-      mouse.x = -9999;
-      mouse.y = -9999;
-    };
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseout', onLeave);
     const ro = new ResizeObserver(resize);
     ro.observe(parent);
 
-    const LINK = 130;
-    const MOUSE_LINK = 170;
+    // baseY/amp/thickness are fractions of height. rgb is the ribbon colour.
+    const ribbons = [
+      { base: 0.46, amp: 0.06, thick: 0.15, freq: 1.7, speed: 0.55, rgb: '39,183,206', alpha: 0.34 },
+      { base: 0.58, amp: 0.05, thick: 0.18, freq: 1.3, speed: -0.4, rgb: '26,138,160', alpha: 0.32 },
+      { base: 0.7, amp: 0.07, thick: 0.2, freq: 2.1, speed: 0.32, rgb: '95,211,227', alpha: 0.26 },
+    ];
+
+    let t = 0;
     let raf = 0;
 
-    const draw = () => {
-      ctx.clearRect(0, 0, W, H);
+    const drawRibbon = (r: (typeof ribbons)[number], phase: number) => {
+      const baseY = r.base * H;
+      const amp = r.amp * H;
+      const thick = r.thick * H;
+      const f = r.freq / W;
+      const wave = (x: number, ph: number) =>
+        amp * Math.sin(x * f + ph) + 0.35 * amp * Math.sin(x * f * 2.3 + ph * 1.6 + 1.1);
 
-      for (const p of pts) {
-        p.x += p.vx;
-        p.y += p.vy;
-        if (p.x < 0) p.x += W;
-        else if (p.x > W) p.x -= W;
-        if (p.y < 0) p.y += H;
-        else if (p.y > H) p.y -= H;
-      }
+      ctx.beginPath();
+      ctx.moveTo(0, baseY + wave(0, phase));
+      for (let x = 0; x <= W; x += 10) ctx.lineTo(x, baseY + wave(x, phase));
+      for (let x = W; x >= 0; x -= 10) ctx.lineTo(x, baseY + thick + wave(x, phase + 1.4));
+      ctx.closePath();
 
-      for (let i = 0; i < pts.length; i++) {
-        const a = pts[i];
-        for (let j = i + 1; j < pts.length; j++) {
-          const b = pts[j];
-          const dx = a.x - b.x;
-          const dy = a.y - b.y;
-          const d = Math.hypot(dx, dy);
-          if (d < LINK) {
-            ctx.strokeStyle = `rgba(39,183,206,${(1 - d / LINK) * 0.18})`;
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(a.x, a.y);
-            ctx.lineTo(b.x, b.y);
-            ctx.stroke();
-          }
-        }
-        const mdx = a.x - mouse.x;
-        const mdy = a.y - mouse.y;
-        const md = Math.hypot(mdx, mdy);
-        if (md < MOUSE_LINK) {
-          ctx.strokeStyle = `rgba(95,211,227,${(1 - md / MOUSE_LINK) * 0.5})`;
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(a.x, a.y);
-          ctx.lineTo(mouse.x, mouse.y);
-          ctx.stroke();
-        }
-      }
-
-      for (const p of pts) {
-        const near = Math.hypot(p.x - mouse.x, p.y - mouse.y) < MOUSE_LINK;
-        ctx.fillStyle = near ? 'rgba(95,211,227,0.95)' : 'rgba(95,211,227,0.6)';
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, near ? 2.4 : 1.7, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      if (!reduce) raf = requestAnimationFrame(draw);
+      const g = ctx.createLinearGradient(0, baseY - amp, 0, baseY + thick + amp);
+      g.addColorStop(0, `rgba(${r.rgb},0)`);
+      g.addColorStop(0.5, `rgba(${r.rgb},${r.alpha})`);
+      g.addColorStop(1, `rgba(${r.rgb},0)`);
+      ctx.fillStyle = g;
+      ctx.fill();
     };
-    draw();
+
+    const render = () => {
+      ctx.clearRect(0, 0, W, H);
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.filter = 'blur(28px)';
+      for (const r of ribbons) drawRibbon(r, t * r.speed);
+      ctx.restore();
+    };
+
+    const loop = () => {
+      t += 0.01;
+      render();
+      raf = requestAnimationFrame(loop);
+    };
+
+    if (reduce) render();
+    else loop();
 
     return () => {
       cancelAnimationFrame(raf);
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseout', onLeave);
       ro.disconnect();
     };
   }, []);
