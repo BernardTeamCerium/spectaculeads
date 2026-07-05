@@ -1,10 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../../src/components/Button';
 import { Slider } from '../../src/components/Slider';
+import { TechBackdrop } from '../../src/components/TechBackdrop';
 import { useApp } from '../../src/state/AppState';
 import { colors, fonts, radii, spacing } from '../../src/theme';
 
@@ -86,17 +87,12 @@ export default function IncomeSteps() {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + spacing.md }]}>
-      {/* Ambient glow behind the hero value */}
-      <View style={styles.glowWrap} pointerEvents="none">
-        <View
-          style={[styles.glow, Platform.OS === 'web' ? ({ filter: 'blur(80px)' } as any) : { opacity: 0.22 }]}
-        />
-      </View>
+      <TechBackdrop glowY="42%" />
 
-      {/* Top bar: back + step dots */}
+      {/* Top bar: back + step progress dots */}
       <View style={styles.topBar}>
         <Pressable onPress={back} style={styles.iconBtn} hitSlop={8}>
-          <Ionicons name="arrow-back" size={22} color={colors.white} />
+          <Ionicons name="arrow-back" size={22} color={colors.indigo} />
         </Pressable>
         <View style={styles.dots}>
           {STEPS.map((_, i) => (
@@ -126,7 +122,6 @@ export default function IncomeSteps() {
           min={step.slider.min}
           max={step.slider.max}
           step={step.slider.step}
-          trackColor="rgba(255,255,255,0.16)"
           onChange={(v) => setPlanInputs({ [step.slider.key]: v })}
         />
         <View style={styles.rangeRow}>
@@ -137,7 +132,6 @@ export default function IncomeSteps() {
         {/* Live roadmap reward */}
         <View style={styles.reward}>
           <View style={styles.rewardHead}>
-            <Ionicons name="sparkles" size={14} color={colors.navy} />
             <Text style={styles.rewardHeadText}>Your roadmap so far</Text>
           </View>
           <View style={styles.rewardStats}>
@@ -167,21 +161,11 @@ function Reward({ value, label: l }: { value: number; label: string }) {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.navy, paddingHorizontal: spacing.lg },
-  glowWrap: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden' },
-  glow: {
-    position: 'absolute',
-    top: '26%',
-    alignSelf: 'center',
-    width: 320,
-    height: 320,
-    borderRadius: 160,
-    backgroundColor: colors.teal,
-  },
+  screen: { flex: 1, backgroundColor: colors.lightBg, paddingHorizontal: spacing.lg },
   topBar: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   iconBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   dots: { flex: 1, flexDirection: 'row', justifyContent: 'center', gap: 8 },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.22)' },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: 'rgba(32,35,78,0.14)' },
   dotActive: { width: 26, backgroundColor: colors.teal },
   dotDone: { backgroundColor: colors.tealDeep },
   body: { flex: 1, paddingTop: spacing.xl },
@@ -190,12 +174,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
-    color: colors.tealLight,
+    color: colors.tealDeep,
   },
   title: {
     fontFamily: fonts.heading,
     fontSize: 28,
-    color: colors.white,
+    color: colors.text,
     marginTop: spacing.sm,
     letterSpacing: -0.5,
     lineHeight: 34,
@@ -203,7 +187,7 @@ const styles = StyleSheet.create({
   hint: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: 'rgba(255,255,255,0.65)',
+    color: colors.muted,
     marginTop: spacing.sm,
     lineHeight: 21,
   },
@@ -211,26 +195,31 @@ const styles = StyleSheet.create({
   heroLabel: {
     fontFamily: fonts.bodySemi,
     fontSize: 13,
-    color: colors.tealLight,
+    color: colors.tealDeep,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   heroValue: {
     fontFamily: fonts.heading,
     fontSize: 60,
-    color: colors.white,
+    color: colors.indigo,
     letterSpacing: -2,
     marginTop: 6,
   },
   rangeRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
-  rangeText: { fontFamily: fonts.body, fontSize: 12, color: 'rgba(255,255,255,0.5)' },
+  rangeText: { fontFamily: fonts.body, fontSize: 12, color: colors.muted },
   reward: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: colors.card,
     borderWidth: 1,
-    borderColor: 'rgba(95,211,227,0.25)',
+    borderColor: colors.border,
     borderRadius: radii.xl,
     padding: spacing.lg,
     marginTop: spacing.xxl,
+    shadowColor: '#1A1D3A',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    elevation: 4,
   },
   rewardHead: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'center' },
   rewardHeadText: {
@@ -239,16 +228,16 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
     textTransform: 'uppercase',
     color: colors.navy,
-    backgroundColor: colors.teal,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    backgroundColor: colors.tealLight,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
     borderRadius: radii.pill,
     overflow: 'hidden',
   },
   rewardStats: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.md },
   rewardStat: { flex: 1, alignItems: 'center' },
-  rewardValue: { fontFamily: fonts.heading, fontSize: 24, color: colors.white },
-  rewardLabel: { fontFamily: fonts.body, fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 2 },
-  rewardDivider: { width: 1, height: 30, backgroundColor: 'rgba(255,255,255,0.12)' },
+  rewardValue: { fontFamily: fonts.heading, fontSize: 24, color: colors.indigo },
+  rewardLabel: { fontFamily: fonts.body, fontSize: 12, color: colors.muted, marginTop: 2 },
+  rewardDivider: { width: 1, height: 30, backgroundColor: colors.border },
   footer: { paddingTop: spacing.md },
 });
