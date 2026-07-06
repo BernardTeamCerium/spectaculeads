@@ -6,15 +6,15 @@ import {
   computePlan,
   DEFAULT_PLAN_INPUTS,
   leadsPerMonth,
-  packsPerMonth,
+  monthlyLeadCost,
   recommendPackage,
   SHOW_RATE,
 } from './incomePlan.ts';
 
 const PACKAGES: CreditPackage[] = [
-  { id: 'starter', name: 'Starter', price: 49.99, credits: 5, perks: [] },
-  { id: 'plus', name: 'Plus', price: 99.99, credits: 10, perks: [] },
-  { id: 'pro', name: 'Pro', price: 199.99, credits: 20, perks: [] },
+  { id: 'single-state', name: 'Single-State Leads', tagline: '', pricePerLead: 75, credits: 10, perks: [] },
+  { id: 'multi-state', name: 'Multi-State Leads', tagline: '', pricePerLead: 60, credits: 10, perks: [], highlight: true },
+  { id: 'national', name: 'National Leads', tagline: '', pricePerLead: 50, credits: 10, perks: [] },
 ];
 
 test('rates are both 33% (one in three)', () => {
@@ -65,35 +65,29 @@ test('guards against divide-by-zero commission', () => {
   assert.ok(Number.isFinite(r.leadsNeeded));
 });
 
-test('intake flows through to the right package end-to-end', () => {
-  // Defaults: 450 leads/yr -> 38/mo -> bigger than any pack -> Pro (largest).
+test('intake flows through to the right tier end-to-end', () => {
+  // Defaults: 450 leads/yr -> 38/mo (high) -> National (lowest cost per lead).
   const big = computePlan(DEFAULT_PLAN_INPUTS);
   assert.equal(big.leadsNeeded, 450);
   const bigRec = recommendPackage(big.leadsNeeded, PACKAGES);
-  assert.equal(bigRec.id, 'pro');
-  assert.equal(packsPerMonth(big.leadsNeeded, bigRec), 2); // ceil(38 / 20)
+  assert.equal(bigRec.id, 'national');
+  assert.equal(monthlyLeadCost(big.leadsNeeded, bigRec), 1900); // 38 × $50
 
-  // $60k goal, 20% of $25k = $5k comm -> 12 deals -> 108 leads -> 9/mo -> Plus.
-  const mid = computePlan({ netIncomeGoal: 60_000, avgSale: 25_000, commissionPct: 20 });
-  assert.equal(mid.leadsNeeded, 108);
-  const midRec = recommendPackage(mid.leadsNeeded, PACKAGES);
-  assert.equal(midRec.id, 'plus');
-  assert.equal(packsPerMonth(mid.leadsNeeded, midRec), 1); // 10 credits covers 9/mo
+  // $100k goal -> 20 deals -> 180 leads -> 15/mo (mid) -> Multi-State (popular).
+  const mid = computePlan({ netIncomeGoal: 100_000, avgSale: 25_000, commissionPct: 20 });
+  assert.equal(mid.leadsNeeded, 180);
+  assert.equal(recommendPackage(mid.leadsNeeded, PACKAGES).id, 'multi-state');
 
-  // $30k goal -> 6 deals -> 54 leads -> 5/mo -> Starter (5) exactly covers it.
-  const small = computePlan({ netIncomeGoal: 30_000, avgSale: 25_000, commissionPct: 20 });
-  assert.equal(small.leadsNeeded, 54);
-  assert.equal(recommendPackage(small.leadsNeeded, PACKAGES).id, 'starter');
+  // $60k goal -> 12 deals -> 108 leads -> 9/mo (low) -> Single-State (targeted).
+  const small = computePlan({ netIncomeGoal: 60_000, avgSale: 25_000, commissionPct: 20 });
+  assert.equal(small.leadsNeeded, 108);
+  assert.equal(recommendPackage(small.leadsNeeded, PACKAGES).id, 'single-state');
 });
 
-test('packsPerMonth is at least 1 and covers the monthly need', () => {
-  assert.equal(packsPerMonth(450, PACKAGES[2]), 2); // 38/mo, 20-credit pack
-  assert.equal(packsPerMonth(0, PACKAGES[0]), 1); // never zero
-  // packs × credits always covers the monthly target
-  for (const leads of [12, 54, 108, 450, 5000]) {
-    const rec = recommendPackage(leads, PACKAGES);
-    assert.ok(packsPerMonth(leads, rec) * rec.credits >= leadsPerMonth(leads));
-  }
+test('monthlyLeadCost = leads/month × per-lead price', () => {
+  const national = PACKAGES.find((p) => p.id === 'national')!;
+  assert.equal(monthlyLeadCost(450, national), 1900); // 38 × $50
+  assert.equal(monthlyLeadCost(0, national), 0);
 });
 
 test('leadsPerMonth rounds up', () => {
@@ -102,11 +96,11 @@ test('leadsPerMonth rounds up', () => {
   assert.equal(leadsPerMonth(13), 2);
 });
 
-test('recommendPackage picks the smallest package that covers monthly need', () => {
-  // defaults -> 450 leads -> 38/mo -> exceeds all -> Pro (largest)
-  assert.equal(recommendPackage(450, PACKAGES).id, 'pro');
-  // 48 leads/yr -> 4/mo -> Starter (5)
-  assert.equal(recommendPackage(48, PACKAGES).id, 'starter');
-  // 108 leads/yr -> 9/mo -> Plus (10)
-  assert.equal(recommendPackage(108, PACKAGES).id, 'plus');
+test('recommendPackage maps monthly volume to a tier', () => {
+  assert.equal(recommendPackage(450, PACKAGES).id, 'national'); // 38/mo (high)
+  assert.equal(recommendPackage(180, PACKAGES).id, 'multi-state'); // 15/mo (mid)
+  assert.equal(recommendPackage(48, PACKAGES).id, 'single-state'); // 4/mo (low)
+  // boundaries: 30/mo -> National ; just under 10/mo -> Single-State
+  assert.equal(recommendPackage(360, PACKAGES).id, 'national'); // 30/mo
+  assert.equal(recommendPackage(108, PACKAGES).id, 'single-state'); // 9/mo
 });

@@ -26,7 +26,7 @@ export default function Buy() {
         <View style={styles.head}>
           <View>
             <Eyebrow>Buy Leads</Eyebrow>
-            <H1 style={{ marginTop: 4 }}>Credit packages</H1>
+            <H1 style={{ marginTop: 4 }}>Lead packages</H1>
           </View>
           <View style={styles.balance}>
             <Ionicons name="flash" size={14} color={colors.teal} />
@@ -35,70 +35,62 @@ export default function Buy() {
         </View>
 
         <Text style={styles.sub}>
-          Each credit unlocks one verified, exclusive lead. Buy more, save more.
+          Every lead is verified and exclusive. Widen your targeting scope to lower the price per lead.
         </Text>
 
-        {CREDIT_PACKAGES.map((pkg) => {
-          const perLead = pkg.price / pkg.credits;
-          return (
-            <Pressable
-              key={pkg.id}
-              onPress={() => router.push(`/checkout?pkg=${pkg.id}`)}
-              style={({ pressed }) => [
-                styles.card,
-                pkg.highlight && styles.cardHighlight,
-                pressed && styles.pressed,
-              ]}
-            >
-              {pkg.highlight && (
-                <View style={styles.ribbonRow}>
-                  <View style={styles.ribbon}>
-                    <Text style={styles.ribbonText}>BEST VALUE</Text>
-                  </View>
-                </View>
-              )}
-              <View style={styles.cardTop}>
-                <View>
-                  <Text style={[styles.pkgName, pkg.highlight && { color: colors.white }]}>
-                    {pkg.name}
-                  </Text>
-                  <Text style={[styles.pkgCredits, pkg.highlight && { color: colors.tealLight }]}>
-                    {pkg.credits} lead credits
-                  </Text>
-                </View>
-                <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={[styles.price, pkg.highlight && { color: colors.white }]}>
-                    {money(pkg.price, { cents: true })}
-                  </Text>
-                  <Text style={[styles.perLead, pkg.highlight && { color: 'rgba(255,255,255,0.7)' }]}>
-                    {money(perLead, { cents: true })}/lead
-                  </Text>
+        {CREDIT_PACKAGES.map((pkg) => (
+          <Pressable
+            key={pkg.id}
+            onPress={() => router.push(`/checkout?pkg=${pkg.id}`)}
+            style={({ pressed }) => [
+              styles.card,
+              pkg.highlight && styles.cardHighlight,
+              pressed && styles.pressed,
+            ]}
+          >
+            {pkg.badge && (
+              <View style={styles.ribbonRow}>
+                <View style={styles.ribbon}>
+                  <Text style={styles.ribbonText}>{pkg.badge}</Text>
                 </View>
               </View>
+            )}
+            <Text style={[styles.pkgName, pkg.highlight && { color: colors.white }]}>
+              {pkg.name}
+            </Text>
+            <View style={styles.priceRow}>
+              <Text style={[styles.price, pkg.highlight && { color: colors.white }]}>
+                {money(pkg.pricePerLead)}
+              </Text>
+              <Text style={[styles.perLead, pkg.highlight && { color: 'rgba(255,255,255,0.7)' }]}>
+                {' '}/ Per Lead
+              </Text>
+            </View>
+            <Text style={[styles.tagline, pkg.highlight && { color: 'rgba(255,255,255,0.75)' }]}>
+              {pkg.tagline}
+            </Text>
 
-              <View style={styles.perks}>
-                {pkg.perks.map((perk) => (
-                  <View key={perk} style={styles.perkRow}>
-                    <Ionicons
-                      name="checkmark-circle"
-                      size={16}
-                      color={pkg.highlight ? colors.tealLight : colors.teal}
-                    />
-                    <Text style={[styles.perkText, pkg.highlight && { color: 'rgba(255,255,255,0.85)' }]}>
-                      {perk}
-                    </Text>
-                  </View>
-                ))}
-              </View>
+            <View style={styles.perks}>
+              {pkg.perks.map((perk) => (
+                <View key={perk} style={styles.perkRow}>
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={16}
+                    color={pkg.highlight ? colors.tealLight : colors.teal}
+                  />
+                  <Text style={[styles.perkText, pkg.highlight && { color: 'rgba(255,255,255,0.85)' }]}>
+                    {perk}
+                  </Text>
+                </View>
+              ))}
+            </View>
 
-              <View style={[styles.buyBtn, pkg.highlight ? styles.buyBtnHighlight : styles.buyBtnDefault]}>
-                <Text style={[styles.buyBtnText, pkg.highlight && { color: colors.navy }]}>
-                  Buy {pkg.name}
-                </Text>
-              </View>
-            </Pressable>
-          );
-        })}
+            <View style={[styles.buyBtn, pkg.highlight ? styles.buyBtnHighlight : styles.buyBtnDefault]}>
+              <Text style={[styles.buyBtnText, pkg.highlight && { color: colors.navy }]}>Buy Leads</Text>
+              <Text style={[styles.buyBtnSub, pkg.highlight && { color: colors.navy }]}>CLICK HERE</Text>
+            </View>
+          </Pressable>
+        ))}
 
         {transactions.length > 0 && (
           <View style={styles.history}>
@@ -171,24 +163,37 @@ const styles = StyleSheet.create({
     borderRadius: radii.pill,
   },
   ribbonText: { fontFamily: fonts.bodyBold, fontSize: 10, color: colors.navy, letterSpacing: 0.6 },
-  cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   pkgName: { fontFamily: fonts.heading, fontSize: 22, color: colors.text },
-  pkgCredits: { fontFamily: fonts.body, fontSize: 14, color: colors.teal, marginTop: 2 },
-  price: { fontFamily: fonts.heading, fontSize: 24, color: colors.text },
-  perLead: { fontFamily: fonts.body, fontSize: 12, color: colors.muted, marginTop: 2 },
+  priceRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: spacing.sm },
+  price: { fontFamily: fonts.heading, fontSize: 34, color: colors.text, letterSpacing: -1 },
+  perLead: { fontFamily: fonts.body, fontSize: 15, color: colors.muted },
+  tagline: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.muted,
+    marginTop: spacing.sm,
+    lineHeight: 20,
+  },
   perks: { marginTop: spacing.lg, gap: spacing.sm },
   perkRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   perkText: { fontFamily: fonts.body, fontSize: 14, color: colors.text },
   buyBtn: {
     marginTop: spacing.lg,
-    height: 48,
+    paddingVertical: 10,
     borderRadius: radii.lg,
     alignItems: 'center',
     justifyContent: 'center',
   },
   buyBtnDefault: { backgroundColor: colors.indigo },
   buyBtnHighlight: { backgroundColor: colors.teal },
-  buyBtnText: { fontFamily: fonts.bodySemi, fontSize: 15, color: colors.white },
+  buyBtnText: { fontFamily: fonts.bodySemi, fontSize: 16, color: colors.white },
+  buyBtnSub: {
+    fontFamily: fonts.bodySemi,
+    fontSize: 10,
+    letterSpacing: 1,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 2,
+  },
   trust: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -30,10 +30,10 @@ const STEPS: Step[] = [
   {
     route: '/buy',
     title: 'Buy leads',
-    body: 'Pick a credit package — “Pro” is the best value. Tap it to check out.',
+    body: 'Pick a targeting tier — “Multi-State” is the most popular. Tap it to check out.',
   },
   {
-    route: '/checkout?pkg=pro',
+    route: '/checkout?pkg=multi-state',
     title: 'Demo purchase',
     body: 'The card is pre-filled — just tap “Pay”. No real charge: credits are added and fresh leads drop into your inbox.',
   },

@@ -21,31 +21,52 @@ export const DEMO_ADVISOR: Advisor = {
   },
 };
 
-/** Credit packages available for purchase. */
+/**
+ * Lead packages available for purchase. Pricing is per lead; the tiers differ
+ * by geographic targeting scope (single state → multi-state → national), which
+ * is what drives the per-lead cost down. `credits` is the batch size delivered
+ * per purchase (uniform, so the per-lead price is the real differentiator).
+ */
+const LEAD_PERKS = [
+  '$100K+ investable assets',
+  'Verified phone & SMS opt-in',
+  'Active retirement interest',
+  'Immediate delivery',
+];
+
 export const CREDIT_PACKAGES: CreditPackage[] = [
   {
-    id: 'starter',
-    name: 'Starter',
-    price: 49.99,
-    credits: 5,
-    perks: ['5 verified leads', 'Standard delivery', 'Email support'],
-  },
-  {
-    id: 'plus',
-    name: 'Plus',
-    price: 99.99,
+    id: 'single-state',
+    name: 'Single-State Leads',
+    tagline: 'State-specific targeting for higher intent conversations.',
+    pricePerLead: 75,
     credits: 10,
-    perks: ['10 verified leads', 'Priority delivery', 'Chat support'],
+    perks: LEAD_PERKS,
   },
   {
-    id: 'pro',
-    name: 'Pro',
-    price: 199.99,
-    credits: 20,
-    perks: ['20 verified leads', 'Instant delivery', 'Dedicated support', 'Lead replacement'],
+    id: 'multi-state',
+    name: 'Multi-State Leads',
+    tagline: 'Balanced volume and scalability for growth-focused advisors.',
+    pricePerLead: 60,
+    credits: 10,
+    perks: LEAD_PERKS,
+    badge: 'Most Popular',
     highlight: true,
   },
+  {
+    id: 'national',
+    name: 'National Leads',
+    tagline: 'Maximum reach with the lowest cost per opportunity.',
+    pricePerLead: 50,
+    credits: 10,
+    perks: LEAD_PERKS,
+  },
 ];
+
+/** Total charged for one purchase of a package (batch size × per-lead price). */
+export function packageTotal(pkg: CreditPackage): number {
+  return pkg.credits * pkg.pricePerLead;
+}
 
 /** ISO timestamp N hours before now — keeps the demo inbox looking fresh. */
 const hoursAgo = (h: number): string => new Date(Date.now() - h * 3600 * 1000).toISOString();

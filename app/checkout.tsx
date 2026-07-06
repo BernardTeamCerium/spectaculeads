@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../src/components/Button';
-import { CREDIT_PACKAGES, LEADS_PER_PURCHASE } from '../src/data/mock';
+import { CREDIT_PACKAGES, LEADS_PER_PURCHASE, packageTotal } from '../src/data/mock';
 import { useApp } from '../src/state/AppState';
 import { colors, fonts, radii, spacing } from '../src/theme';
 import { money } from '../src/utils/format';
@@ -29,8 +29,9 @@ export default function Checkout() {
   const selected = CREDIT_PACKAGES.find((p) => p.id === pkg) ?? CREDIT_PACKAGES[0];
   const [phase, setPhase] = useState<Phase>('form');
   const paidRef = useRef(false);
-  const tax = selected.price * 0.0;
-  const total = selected.price + tax;
+  const subtotal = packageTotal(selected);
+  const tax = subtotal * 0.0;
+  const total = subtotal + tax;
 
   const pay = () => {
     if (paidRef.current) return; // guard against double-charge
@@ -50,7 +51,7 @@ export default function Checkout() {
         </View>
         <Text style={styles.successTitle}>Payment complete</Text>
         <Text style={styles.successSub}>
-          {selected.credits} credits added · {LEADS_PER_PURCHASE} new leads dropped into your inbox.
+          {selected.credits} {selected.name} credits added · {LEADS_PER_PURCHASE} new leads dropped into your inbox.
         </Text>
         <View style={styles.balancePill}>
           <Ionicons name="flash" size={16} color={colors.teal} />
@@ -81,14 +82,16 @@ export default function Checkout() {
         <View style={styles.summary}>
           <View style={styles.summaryTop}>
             <View>
-              <Text style={styles.summaryName}>{selected.name} pack</Text>
-              <Text style={styles.summaryCredits}>{selected.credits} lead credits</Text>
+              <Text style={styles.summaryName}>{selected.name}</Text>
+              <Text style={styles.summaryCredits}>
+                {selected.credits} leads × {money(selected.pricePerLead)}/lead
+              </Text>
             </View>
-            <Text style={styles.summaryPrice}>{money(selected.price, { cents: true })}</Text>
+            <Text style={styles.summaryPrice}>{money(subtotal, { cents: true })}</Text>
           </View>
           <View style={styles.summaryLine}>
             <Text style={styles.lineLabel}>Subtotal</Text>
-            <Text style={styles.lineValue}>{money(selected.price, { cents: true })}</Text>
+            <Text style={styles.lineValue}>{money(subtotal, { cents: true })}</Text>
           </View>
           <View style={styles.summaryLine}>
             <Text style={styles.lineLabel}>Tax</Text>

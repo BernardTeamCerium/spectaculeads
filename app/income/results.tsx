@@ -7,7 +7,7 @@ import { CREDIT_PACKAGES } from '../../src/data/mock';
 import {
   commissionDollars,
   leadsPerMonth,
-  packsPerMonth,
+  monthlyLeadCost,
   recommendPackage,
 } from '../../src/lib/incomePlan';
 import { useApp } from '../../src/state/AppState';
@@ -21,18 +21,10 @@ export default function IncomeResults() {
 
   const monthlyLeads = leadsPerMonth(planResults.leadsNeeded);
   const recommended = recommendPackage(planResults.leadsNeeded, CREDIT_PACKAGES);
-  // If one pack covers a month or more, show months-per-pack; otherwise the
-  // monthly need outgrows a single pack, so show packs-per-month instead.
-  const coversMonth = recommended.credits >= monthlyLeads;
-  const monthsCovered = Math.round((recommended.credits / Math.max(1, monthlyLeads)) * 10) / 10;
-  const packsNeeded = packsPerMonth(planResults.leadsNeeded, recommended);
-  const recReason = coversMonth
-    ? `Sized to your target of ${monthlyLeads} leads/month — about ${monthsCovered} ${
-        monthsCovered === 1 ? 'month' : 'months'
-      } of leads per pack.`
-    : `To hit ${monthlyLeads} leads/month, grab about ${packsNeeded} ${
-        packsNeeded === 1 ? 'pack' : 'packs'
-      } a month — ${recommended.name} is our largest, best-value pack.`;
+  const monthlyCost = monthlyLeadCost(planResults.leadsNeeded, recommended);
+  const recReason = `At about ${monthlyLeads} leads/month, ${recommended.name} runs ~${money(
+    monthlyCost
+  )}/mo at ${money(recommended.pricePerLead)}/lead.`;
 
   return (
     <View style={styles.screen}>
@@ -87,15 +79,18 @@ export default function IncomeResults() {
         <Text style={styles.recHead}>Recommended for your goal</Text>
         <View style={styles.recCard}>
           <View style={styles.recTop}>
-            <View>
-              <Text style={styles.recName}>{recommended.name} pack</Text>
-              <Text style={styles.recCredits}>{recommended.credits} lead credits</Text>
+            <View style={{ flex: 1, paddingRight: spacing.md }}>
+              <Text style={styles.recName}>{recommended.name}</Text>
+              <Text style={styles.recCredits}>{recommended.tagline}</Text>
             </View>
-            <Text style={styles.recPrice}>{money(recommended.price, { cents: true })}</Text>
+            <View style={{ alignItems: 'flex-end' }}>
+              <Text style={styles.recPrice}>{money(recommended.pricePerLead)}</Text>
+              <Text style={styles.recCredits}>/ lead</Text>
+            </View>
           </View>
           <Text style={styles.recReason}>{recReason}</Text>
           <Button
-            label={`Buy ${recommended.name} pack`}
+            label="Buy Leads"
             variant="teal"
             onPress={() => router.replace(`/checkout?pkg=${recommended.id}`)}
             style={{ marginTop: spacing.lg }}

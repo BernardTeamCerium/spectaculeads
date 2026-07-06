@@ -59,10 +59,12 @@ export interface Advisor {
 export interface CreditPackage {
   id: string;
   name: string;
-  price: number;
-  credits: number;
+  tagline: string; // one-line positioning shown under the name
+  pricePerLead: number; // price of a single lead in this tier ($)
+  credits: number; // leads delivered per purchase (batch size)
   perks: string[];
-  highlight?: boolean;
+  badge?: string; // optional ribbon, e.g. "Most Popular"
+  highlight?: boolean; // dark, emphasized card treatment
 }
 
 /** A completed (mock) credit purchase, recorded in live state. */

@@ -59,25 +59,22 @@ export function computePlan(inputs: PlanInputs): PlanResults {
   return { projectedIncome, dealsNeeded, appointmentsNeeded, leadsNeeded, salesVolume };
 }
 
-/**
- * Recommend a credit package based on the advisor's monthly lead target.
- * Leads are bought in small recurring batches, so we size against the
- * per-month need: pick the smallest package whose credits cover it, else Pro.
- */
 export function leadsPerMonth(leadsNeeded: number): number {
   return Math.ceil(leadsNeeded / 12);
 }
 
-/**
- * How many of a given pack the advisor needs each month to keep pace with
- * their monthly lead target (at least one). When the monthly need is larger
- * than any single pack, this is how the recommendation stays honest — e.g.
- * 38 leads/month against a 20-credit Pro pack ⇒ 2 packs/month.
- */
-export function packsPerMonth(leadsNeeded: number, pkg: CreditPackage): number {
-  return Math.max(1, Math.ceil(leadsPerMonth(leadsNeeded) / Math.max(1, pkg.credits)));
+/** Estimated monthly lead spend on a tier: leads/month × its per-lead price. */
+export function monthlyLeadCost(leadsNeeded: number, pkg: CreditPackage): number {
+  return leadsPerMonth(leadsNeeded) * pkg.pricePerLead;
 }
 
+/**
+ * Recommend a lead tier from the advisor's monthly lead volume. The tiers
+ * differ by targeting scope / cost-per-lead, so we match to volume:
+ *   - high volume (≥ 30/mo) → lowest cost per lead (widest reach)
+ *   - low volume  (< 10/mo) → most targeted, highest-intent tier (priciest)
+ *   - in between            → the balanced "most popular" tier when flagged
+ */
 export function recommendPackage(
   leadsNeeded: number,
   packages: CreditPackage[]
@@ -86,7 +83,8 @@ export function recommendPackage(
     throw new Error('recommendPackage requires at least one package');
   }
   const monthly = leadsPerMonth(leadsNeeded);
-  const bySize = [...packages].sort((a, b) => a.credits - b.credits);
-  const fit = bySize.find((p) => p.credits >= monthly);
-  return fit ?? bySize[bySize.length - 1];
+  const cheapestFirst = [...packages].sort((a, b) => a.pricePerLead - b.pricePerLead);
+  if (monthly >= 30) return cheapestFirst[0];
+  if (monthly < 10) return cheapestFirst[cheapestFirst.length - 1];
+  return packages.find((p) => p.highlight) ?? cheapestFirst[Math.floor(cheapestFirst.length / 2)];
 }

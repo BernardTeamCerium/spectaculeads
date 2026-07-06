@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
-import { DEMO_ADVISOR, generateLeads, LEADS_PER_PURCHASE, SAMPLE_LEADS } from '../data/mock';
+import { DEMO_ADVISOR, generateLeads, LEADS_PER_PURCHASE, packageTotal, SAMPLE_LEADS } from '../data/mock';
 import { computePlan, DEFAULT_PLAN_INPUTS } from '../lib/incomePlan';
 import { CreditPackage, Lead, LeadStatus, License, PlanInputs, PlanResults, Transaction } from '../types';
 
@@ -138,7 +138,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         packageId: pkg.id,
         packageName: pkg.name,
         credits: pkg.credits,
-        amount: pkg.price,
+        amount: packageTotal(pkg),
         date: new Date().toISOString(),
       },
       ...prev,
