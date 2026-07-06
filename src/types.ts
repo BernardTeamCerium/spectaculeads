@@ -77,8 +77,8 @@ export interface Transaction {
 
 export interface PlanInputs {
   netIncomeGoal: number; // desired NET yearly income ($)
-  avgSale: number; // average sale amount ($)
-  avgCommission: number; // average commission per sale ($)
+  avgSale: number; // average sale / policy size ($)
+  commissionPct: number; // commission you personally pocket per sale (%)
 }
 
 export interface PlanResults {

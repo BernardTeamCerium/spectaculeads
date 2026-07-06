@@ -21,7 +21,7 @@ test('rates are both 33% (one in three)', () => {
   assert.equal(CLOSE_RATE, 1 / 3);
 });
 
-test('worked example: $250k / $25k / $5k defaults', () => {
+test('worked example: $250k goal / $25k sale / 20% commission defaults', () => {
   const r = computePlan(DEFAULT_PLAN_INPUTS);
   assert.equal(r.dealsNeeded, 50);
   assert.equal(r.appointmentsNeeded, 150);
@@ -31,8 +31,8 @@ test('worked example: $250k / $25k / $5k defaults', () => {
 });
 
 test('deals = income ÷ commission, rounded up', () => {
-  // 100k / 30k = 3.33 -> 4 deals
-  const r = computePlan({ netIncomeGoal: 100_000, avgSale: 25_000, avgCommission: 30_000 });
+  // commission = 60k × 50% = 30k ; 100k / 30k = 3.33 -> 4 deals
+  const r = computePlan({ netIncomeGoal: 100_000, avgSale: 60_000, commissionPct: 50 });
   assert.equal(r.dealsNeeded, 4);
   // appointments = ceil(4 / (1/3)) = 12 ; leads = ceil(12 / (1/3)) = 36
   assert.equal(r.appointmentsNeeded, 12);
@@ -41,7 +41,7 @@ test('deals = income ÷ commission, rounded up', () => {
 
 test('projected income always meets or exceeds the goal', () => {
   for (const goal of [50_000, 137_500, 250_000, 1_000_000]) {
-    const r = computePlan({ netIncomeGoal: goal, avgSale: 25_000, avgCommission: 5_000 });
+    const r = computePlan({ netIncomeGoal: goal, avgSale: 25_000, commissionPct: 20 });
     assert.ok(r.projectedIncome >= goal, `projected ${r.projectedIncome} >= goal ${goal}`);
   }
 });
@@ -50,7 +50,7 @@ test('more deals never means fewer leads/appointments (monotonic)', () => {
   let prevLeads = 0;
   let prevAppts = 0;
   for (const goal of [50_000, 100_000, 250_000, 500_000, 1_000_000]) {
-    const r = computePlan({ netIncomeGoal: goal, avgSale: 25_000, avgCommission: 5_000 });
+    const r = computePlan({ netIncomeGoal: goal, avgSale: 25_000, commissionPct: 20 });
     assert.ok(r.leadsNeeded >= prevLeads);
     assert.ok(r.appointmentsNeeded >= prevAppts);
     prevLeads = r.leadsNeeded;
@@ -59,7 +59,7 @@ test('more deals never means fewer leads/appointments (monotonic)', () => {
 });
 
 test('guards against divide-by-zero commission', () => {
-  const r = computePlan({ netIncomeGoal: 250_000, avgSale: 25_000, avgCommission: 0 });
+  const r = computePlan({ netIncomeGoal: 250_000, avgSale: 25_000, commissionPct: 0 });
   assert.ok(Number.isFinite(r.dealsNeeded));
   assert.ok(Number.isFinite(r.leadsNeeded));
 });

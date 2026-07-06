@@ -5,7 +5,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../../src/components/Button';
 import { Body, Card, Divider, Eyebrow, H1, H2 } from '../../src/components/ui';
-import { CLOSE_RATE, SHOW_RATE } from '../../src/lib/incomePlan';
+import { CLOSE_RATE, commissionDollars, SHOW_RATE } from '../../src/lib/incomePlan';
 import { useApp } from '../../src/state/AppState';
 import { colors, fonts, radii, spacing } from '../../src/theme';
 import { money } from '../../src/utils/format';
@@ -122,7 +122,10 @@ export default function Plan() {
               <Divider />
               <Row label="Leads to work" value={`${leads}`} />
               <Divider />
-              <Row label="Avg commission / deal" value={money(planInputs.avgCommission)} />
+              <Row
+                label="Avg commission / deal"
+                value={`${money(commissionDollars(planInputs))} · ${planInputs.commissionPct}%`}
+              />
             </Card>
           </>
         ) : (

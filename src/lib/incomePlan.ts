@@ -8,6 +8,7 @@ import type { CreditPackage, PlanInputs, PlanResults } from '../types';
  *
  *        leads ──(show rate)──▶ appointments ──(close rate)──▶ deals ──▶ income
  *
+ *   avgCommission = avgSale × commissionPct ÷ 100   (dollars kept per deal)
  *   deals        = ceil( netIncomeGoal ÷ avgCommission )
  *   appointments = ceil( deals        ÷ closeRate )      // close rate = 33%
  *   leads        = ceil( appointments ÷ showRate  )      // show rate  = 33%
@@ -18,12 +19,13 @@ import type { CreditPackage, PlanInputs, PlanResults } from '../types';
  * Both the show rate and close rate are 33% — i.e. one in three. We model that
  * as exactly 1/3 so the funnel produces clean, consistent numbers.
  *
- * Worked example for the defaults ($250k / $25k / $5k):
- *   deals        = ceil(250,000 ÷ 5,000)   = 50
- *   appointments = ceil(50 ÷ (1/3))        = 150
- *   leads        = ceil(150 ÷ (1/3))       = 450
- *   projectedIncome = 50 × 5,000           = $250,000
- *   salesVolume     = 50 × 25,000          = $1,250,000
+ * Worked example for the defaults ($250k goal / $25k sale / 20% commission):
+ *   avgCommission = 25,000 × 20 ÷ 100     = $5,000
+ *   deals         = ceil(250,000 ÷ 5,000) = 50
+ *   appointments  = ceil(50 ÷ (1/3))      = 150
+ *   leads         = ceil(150 ÷ (1/3))     = 450
+ *   projectedIncome = 50 × 5,000          = $250,000
+ *   salesVolume     = 50 × 25,000         = $1,250,000
  */
 
 /** Fraction of leads that turn into a held appointment. 33% = one in three. */
@@ -36,11 +38,16 @@ export const CLOSE_RATE = 1 / 3;
 export const DEFAULT_PLAN_INPUTS: PlanInputs = {
   netIncomeGoal: 250_000,
   avgSale: 25_000,
-  avgCommission: 5_000,
+  commissionPct: 20,
 };
 
+/** Dollar commission kept per deal, derived from sale size × commission %. */
+export function commissionDollars(inputs: PlanInputs): number {
+  return (Math.max(0, inputs.avgSale) * Math.max(0, inputs.commissionPct)) / 100;
+}
+
 export function computePlan(inputs: PlanInputs): PlanResults {
-  const avgCommission = Math.max(1, inputs.avgCommission);
+  const avgCommission = Math.max(1, commissionDollars(inputs));
 
   const dealsNeeded = Math.ceil(inputs.netIncomeGoal / avgCommission);
   const appointmentsNeeded = Math.ceil(dealsNeeded / CLOSE_RATE);

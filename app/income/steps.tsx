@@ -10,11 +10,12 @@ import { useApp } from '../../src/state/AppState';
 import { colors, fonts, radii, spacing } from '../../src/theme';
 
 interface SliderDef {
-  key: 'netIncomeGoal' | 'avgSale' | 'avgCommission';
+  key: 'netIncomeGoal' | 'avgSale' | 'commissionPct';
   label: string;
   min: number;
   max: number;
   step: number;
+  unit?: 'money' | 'percent';
 }
 
 interface StepDef {
@@ -37,9 +38,10 @@ function shortMoney(v: number): string {
   return `$${v}`;
 }
 
-/** Adds a trailing "+" once a slider is maxed out (e.g. "$1M+"). */
-function label(v: number, max: number): string {
-  return shortMoney(v) + (v >= max ? '+' : '');
+/** Formats a slider value for its unit, adding a trailing "+" once maxed. */
+function label(v: number, max: number, unit: SliderDef['unit'] = 'money'): string {
+  const base = unit === 'percent' ? `${v}%` : shortMoney(v);
+  return base + (v >= max ? '+' : '');
 }
 
 const STEPS: StepDef[] = [
@@ -52,14 +54,14 @@ const STEPS: StepDef[] = [
   {
     eyebrow: 'Step 2 of 3',
     title: 'What’s your average sale?',
-    hint: 'The typical premium or policy size you write.',
-    slider: { key: 'avgSale', label: 'Average sale', min: 1_000, max: 100_000, step: 1_000 },
+    hint: 'The typical policy size you write.',
+    slider: { key: 'avgSale', label: 'Average sale', min: 1_000, max: 20_000_000, step: 1_000 },
   },
   {
     eyebrow: 'Step 3 of 3',
     title: 'What do you earn per sale?',
-    hint: 'The commission you personally pocket on a typical deal.',
-    slider: { key: 'avgCommission', label: 'Average commission', min: 100, max: 20_000, step: 100 },
+    hint: 'Your commission percentage you personally pocket on a typical deal.',
+    slider: { key: 'commissionPct', label: 'Commission per sale', min: 1, max: 50, step: 1, unit: 'percent' },
   },
 ];
 
@@ -113,7 +115,9 @@ export default function IncomeSteps() {
         {/* Hero value */}
         <View style={styles.hero}>
           <Text style={styles.heroLabel}>{step.slider.label}</Text>
-          <Text style={styles.heroValue}>{label(planInputs[step.slider.key], step.slider.max)}</Text>
+          <Text style={styles.heroValue}>
+            {label(planInputs[step.slider.key], step.slider.max, step.slider.unit)}
+          </Text>
         </View>
 
         {/* Slider */}
@@ -125,8 +129,8 @@ export default function IncomeSteps() {
           onChange={(v) => setPlanInputs({ [step.slider.key]: v })}
         />
         <View style={styles.rangeRow}>
-          <Text style={styles.rangeText}>{label(step.slider.min, step.slider.max)}</Text>
-          <Text style={styles.rangeText}>{label(step.slider.max, step.slider.max)}</Text>
+          <Text style={styles.rangeText}>{label(step.slider.min, step.slider.max, step.slider.unit)}</Text>
+          <Text style={styles.rangeText}>{label(step.slider.max, step.slider.max, step.slider.unit)}</Text>
         </View>
 
         {/* Live roadmap reward */}

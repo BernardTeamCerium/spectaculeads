@@ -4,7 +4,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../../src/components/Button';
 import { CREDIT_PACKAGES } from '../../src/data/mock';
-import { leadsPerMonth, recommendPackage } from '../../src/lib/incomePlan';
+import { commissionDollars, leadsPerMonth, recommendPackage } from '../../src/lib/incomePlan';
 import { useApp } from '../../src/state/AppState';
 import { colors, fonts, radii, spacing } from '../../src/theme';
 import { money } from '../../src/utils/format';
@@ -37,7 +37,9 @@ export default function IncomeResults() {
         <View style={styles.hero}>
           <Text style={styles.heroLabel}>Projected annual income</Text>
           <Text style={styles.heroValue}>{money(planResults.projectedIncome)}</Text>
-          <Text style={styles.heroSub}>at {money(planInputs.avgCommission)} avg commission per deal</Text>
+          <Text style={styles.heroSub}>
+            at {money(commissionDollars(planInputs))} per deal ({planInputs.commissionPct}% commission)
+          </Text>
         </View>
 
         {/* Funnel: deals -> appointments -> leads */}
