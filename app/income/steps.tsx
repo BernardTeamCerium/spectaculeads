@@ -49,7 +49,7 @@ const STEPS: StepDef[] = [
     eyebrow: 'Step 1 of 3',
     title: 'What income do you want this year?',
     hint: 'Dream big — you can fine-tune it anytime.',
-    slider: { key: 'netIncomeGoal', label: 'Target net income', min: 50_000, max: 1_000_000, step: 10_000 },
+    slider: { key: 'netIncomeGoal', label: 'Target net income', min: 50_000, max: 10_000_000, step: 10_000 },
   },
   {
     eyebrow: 'Step 2 of 3',

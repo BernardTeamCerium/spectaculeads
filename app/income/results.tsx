@@ -4,7 +4,12 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../../src/components/Button';
 import { CREDIT_PACKAGES } from '../../src/data/mock';
-import { commissionDollars, leadsPerMonth, recommendPackage } from '../../src/lib/incomePlan';
+import {
+  commissionDollars,
+  leadsPerMonth,
+  packsPerMonth,
+  recommendPackage,
+} from '../../src/lib/incomePlan';
 import { useApp } from '../../src/state/AppState';
 import { colors, fonts, radii, spacing } from '../../src/theme';
 import { money } from '../../src/utils/format';
@@ -16,7 +21,18 @@ export default function IncomeResults() {
 
   const monthlyLeads = leadsPerMonth(planResults.leadsNeeded);
   const recommended = recommendPackage(planResults.leadsNeeded, CREDIT_PACKAGES);
+  // If one pack covers a month or more, show months-per-pack; otherwise the
+  // monthly need outgrows a single pack, so show packs-per-month instead.
+  const coversMonth = recommended.credits >= monthlyLeads;
   const monthsCovered = Math.round((recommended.credits / Math.max(1, monthlyLeads)) * 10) / 10;
+  const packsNeeded = packsPerMonth(planResults.leadsNeeded, recommended);
+  const recReason = coversMonth
+    ? `Sized to your target of ${monthlyLeads} leads/month — about ${monthsCovered} ${
+        monthsCovered === 1 ? 'month' : 'months'
+      } of leads per pack.`
+    : `To hit ${monthlyLeads} leads/month, grab about ${packsNeeded} ${
+        packsNeeded === 1 ? 'pack' : 'packs'
+      } a month — ${recommended.name} is our largest, best-value pack.`;
 
   return (
     <View style={styles.screen}>
@@ -77,10 +93,7 @@ export default function IncomeResults() {
             </View>
             <Text style={styles.recPrice}>{money(recommended.price, { cents: true })}</Text>
           </View>
-          <Text style={styles.recReason}>
-            Sized to your target of {monthlyLeads} leads/month — about {monthsCovered}{' '}
-            {monthsCovered === 1 ? 'month' : 'months'} of leads per pack.
-          </Text>
+          <Text style={styles.recReason}>{recReason}</Text>
           <Button
             label={`Buy ${recommended.name} pack`}
             variant="teal"

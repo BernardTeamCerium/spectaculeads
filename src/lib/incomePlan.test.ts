@@ -6,6 +6,7 @@ import {
   computePlan,
   DEFAULT_PLAN_INPUTS,
   leadsPerMonth,
+  packsPerMonth,
   recommendPackage,
   SHOW_RATE,
 } from './incomePlan.ts';
@@ -62,6 +63,37 @@ test('guards against divide-by-zero commission', () => {
   const r = computePlan({ netIncomeGoal: 250_000, avgSale: 25_000, commissionPct: 0 });
   assert.ok(Number.isFinite(r.dealsNeeded));
   assert.ok(Number.isFinite(r.leadsNeeded));
+});
+
+test('intake flows through to the right package end-to-end', () => {
+  // Defaults: 450 leads/yr -> 38/mo -> bigger than any pack -> Pro (largest).
+  const big = computePlan(DEFAULT_PLAN_INPUTS);
+  assert.equal(big.leadsNeeded, 450);
+  const bigRec = recommendPackage(big.leadsNeeded, PACKAGES);
+  assert.equal(bigRec.id, 'pro');
+  assert.equal(packsPerMonth(big.leadsNeeded, bigRec), 2); // ceil(38 / 20)
+
+  // $60k goal, 20% of $25k = $5k comm -> 12 deals -> 108 leads -> 9/mo -> Plus.
+  const mid = computePlan({ netIncomeGoal: 60_000, avgSale: 25_000, commissionPct: 20 });
+  assert.equal(mid.leadsNeeded, 108);
+  const midRec = recommendPackage(mid.leadsNeeded, PACKAGES);
+  assert.equal(midRec.id, 'plus');
+  assert.equal(packsPerMonth(mid.leadsNeeded, midRec), 1); // 10 credits covers 9/mo
+
+  // $30k goal -> 6 deals -> 54 leads -> 5/mo -> Starter (5) exactly covers it.
+  const small = computePlan({ netIncomeGoal: 30_000, avgSale: 25_000, commissionPct: 20 });
+  assert.equal(small.leadsNeeded, 54);
+  assert.equal(recommendPackage(small.leadsNeeded, PACKAGES).id, 'starter');
+});
+
+test('packsPerMonth is at least 1 and covers the monthly need', () => {
+  assert.equal(packsPerMonth(450, PACKAGES[2]), 2); // 38/mo, 20-credit pack
+  assert.equal(packsPerMonth(0, PACKAGES[0]), 1); // never zero
+  // packs × credits always covers the monthly target
+  for (const leads of [12, 54, 108, 450, 5000]) {
+    const rec = recommendPackage(leads, PACKAGES);
+    assert.ok(packsPerMonth(leads, rec) * rec.credits >= leadsPerMonth(leads));
+  }
 });
 
 test('leadsPerMonth rounds up', () => {

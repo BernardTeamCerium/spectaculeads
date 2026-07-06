@@ -68,6 +68,16 @@ export function leadsPerMonth(leadsNeeded: number): number {
   return Math.ceil(leadsNeeded / 12);
 }
 
+/**
+ * How many of a given pack the advisor needs each month to keep pace with
+ * their monthly lead target (at least one). When the monthly need is larger
+ * than any single pack, this is how the recommendation stays honest — e.g.
+ * 38 leads/month against a 20-credit Pro pack ⇒ 2 packs/month.
+ */
+export function packsPerMonth(leadsNeeded: number, pkg: CreditPackage): number {
+  return Math.max(1, Math.ceil(leadsPerMonth(leadsNeeded) / Math.max(1, pkg.credits)));
+}
+
 export function recommendPackage(
   leadsNeeded: number,
   packages: CreditPackage[]
