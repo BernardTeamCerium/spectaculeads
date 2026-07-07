@@ -1,17 +1,14 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../../src/components/Button';
 import { Slider } from '../../src/components/Slider';
-import { TechBackdrop } from '../../src/components/TechBackdrop';
 import { useApp } from '../../src/state/AppState';
 import { colors, fonts, radii, spacing } from '../../src/theme';
 
 interface SliderDef {
   key: 'netIncomeGoal' | 'avgSale' | 'commissionPct';
-  label: string;
   min: number;
   max: number;
   step: number;
@@ -19,9 +16,9 @@ interface SliderDef {
 }
 
 interface StepDef {
-  eyebrow: string;
   title: string;
-  hint: string;
+  subtitle: string;
+  sliderHint: string;
   slider: SliderDef;
 }
 
@@ -44,31 +41,37 @@ function label(v: number, max: number, unit: SliderDef['unit'] = 'money'): strin
   return base + (v >= max ? '+' : '');
 }
 
+/** The full-dollar hero value, e.g. "$250,000". Percent shows "20%". */
+function heroValue(v: number, unit: SliderDef['unit'] = 'money'): string {
+  if (unit === 'percent') return `${v}%`;
+  return `$${v.toLocaleString('en-US')}`;
+}
+
 const STEPS: StepDef[] = [
   {
-    eyebrow: 'Step 1 of 3',
-    title: 'What income do you want this year?',
-    hint: 'Dream big — you can fine-tune it anytime.',
-    slider: { key: 'netIncomeGoal', label: 'Target net income', min: 50_000, max: 10_000_000, step: 10_000 },
+    title: 'What is your desired NET yearly income?',
+    subtitle: 'This is your personal take-home income goal.',
+    sliderHint: 'Drag the slider to set your goal',
+    slider: { key: 'netIncomeGoal', min: 50_000, max: 10_000_000, step: 10_000 },
   },
   {
-    eyebrow: 'Step 2 of 3',
-    title: 'What’s your average sale?',
-    hint: 'The typical policy size you write.',
-    slider: { key: 'avgSale', label: 'Average sale', min: 1_000, max: 20_000_000, step: 1_000 },
+    title: 'What is your average sale amount?',
+    subtitle: 'The typical policy size you write.',
+    sliderHint: 'Drag the slider to set your average',
+    slider: { key: 'avgSale', min: 1_000, max: 20_000_000, step: 1_000 },
   },
   {
-    eyebrow: 'Step 3 of 3',
-    title: 'What do you earn per sale?',
-    hint: 'Your commission percentage you personally pocket on a typical deal.',
-    slider: { key: 'commissionPct', label: 'Commission per sale', min: 1, max: 50, step: 1, unit: 'percent' },
+    title: 'What is your average commission per sale?',
+    subtitle: 'Your commission percentage you personally pocket on a typical deal.',
+    sliderHint: 'Drag the slider to set your average',
+    slider: { key: 'commissionPct', min: 1, max: 50, step: 1, unit: 'percent' },
   },
 ];
 
 export default function IncomeSteps() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { planInputs, setPlanInputs, planResults, setPlanComplete } = useApp();
+  const { planInputs, setPlanInputs, setPlanComplete } = useApp();
   const [index, setIndex] = useState(0);
 
   const step = STEPS[index];
@@ -88,160 +91,112 @@ export default function IncomeSteps() {
   };
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top + spacing.md }]}>
-      <TechBackdrop glowY="42%" />
-
-      {/* Top bar: back + step progress dots */}
-      <View style={styles.topBar}>
-        <Pressable onPress={back} style={styles.iconBtn} hitSlop={8}>
-          <Ionicons name="arrow-back" size={22} color={colors.indigo} />
-        </Pressable>
-        <View style={styles.dots}>
-          {STEPS.map((_, i) => (
-            <View
-              key={i}
-              style={[styles.dot, i === index && styles.dotActive, i < index && styles.dotDone]}
-            />
-          ))}
-        </View>
-        <View style={{ width: 40 }} />
+    <View style={[styles.screen, { paddingTop: insets.top + spacing.lg }]}>
+      {/* Step progress */}
+      <Text style={styles.stepLabel}>Step {index + 1} of {STEPS.length}</Text>
+      <View style={styles.progressRow}>
+        {STEPS.map((_, i) => (
+          <Fragment key={i}>
+            {i > 0 && <View style={[styles.progressLine, i <= index && styles.progressLineOn]} />}
+            <View style={[styles.progressDot, i <= index && styles.progressDotOn]} />
+          </Fragment>
+        ))}
       </View>
 
+      {/* Question */}
       <View style={styles.body}>
-        <Text style={styles.eyebrow}>{step.eyebrow}</Text>
         <Text style={styles.title}>{step.title}</Text>
-        <Text style={styles.hint}>{step.hint}</Text>
+        <Text style={styles.subtitle}>{step.subtitle}</Text>
 
-        {/* Hero value */}
-        <View style={styles.hero}>
-          <Text style={styles.heroLabel}>{step.slider.label}</Text>
-          <Text style={styles.heroValue}>
-            {label(planInputs[step.slider.key], step.slider.max, step.slider.unit)}
-          </Text>
-        </View>
+        <Text style={styles.value}>{heroValue(planInputs[step.slider.key], step.slider.unit)}</Text>
+        <Text style={styles.sliderHint}>{step.sliderHint}</Text>
 
-        {/* Slider */}
-        <Slider
-          value={planInputs[step.slider.key]}
-          min={step.slider.min}
-          max={step.slider.max}
-          step={step.slider.step}
-          onChange={(v) => setPlanInputs({ [step.slider.key]: v })}
-        />
-        <View style={styles.rangeRow}>
-          <Text style={styles.rangeText}>{label(step.slider.min, step.slider.max, step.slider.unit)}</Text>
-          <Text style={styles.rangeText}>{label(step.slider.max, step.slider.max, step.slider.unit)}</Text>
-        </View>
-
-        {/* Live roadmap reward */}
-        <View style={styles.reward}>
-          <View style={styles.rewardHead}>
-            <Text style={styles.rewardHeadText}>Your roadmap so far</Text>
-          </View>
-          <View style={styles.rewardStats}>
-            <Reward value={planResults.dealsNeeded} label="deals" />
-            <View style={styles.rewardDivider} />
-            <Reward value={planResults.appointmentsNeeded} label="appts" />
-            <View style={styles.rewardDivider} />
-            <Reward value={planResults.leadsNeeded} label="leads" />
+        <View style={styles.sliderWrap}>
+          <Slider
+            value={planInputs[step.slider.key]}
+            min={step.slider.min}
+            max={step.slider.max}
+            step={step.slider.step}
+            onChange={(v) => setPlanInputs({ [step.slider.key]: v })}
+          />
+          <View style={styles.rangeRow}>
+            <Text style={styles.rangeText}>{label(step.slider.min, step.slider.max, step.slider.unit)}</Text>
+            <Text style={styles.rangeText}>{label(step.slider.max, step.slider.max, step.slider.unit)}</Text>
           </View>
         </View>
       </View>
 
+      {/* Navigation */}
       <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.lg }]}>
-        <Button label={isLast ? 'See my plan' : 'Continue'} variant="teal" onPress={next} />
+        <Button label={isLast ? 'See My Results' : 'Next'} variant="teal" onPress={next} />
+        <Pressable onPress={back} style={styles.prevBtn} hitSlop={8}>
+          <Text style={styles.prevText}>Previous</Text>
+        </Pressable>
       </View>
-    </View>
-  );
-}
-
-function Reward({ value, label: l }: { value: number; label: string }) {
-  return (
-    <View style={styles.rewardStat}>
-      <Text style={styles.rewardValue}>{value}</Text>
-      <Text style={styles.rewardLabel}>{l}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.lightBg, paddingHorizontal: spacing.lg },
-  topBar: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  iconBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  dots: { flex: 1, flexDirection: 'row', justifyContent: 'center', gap: 8 },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: 'rgba(32,35,78,0.14)' },
-  dotActive: { width: 26, backgroundColor: colors.teal },
-  dotDone: { backgroundColor: colors.tealDeep },
-  body: { flex: 1, paddingTop: spacing.xl },
-  eyebrow: {
+  screen: { flex: 1, backgroundColor: colors.lightBg, paddingHorizontal: spacing.xl },
+  stepLabel: {
     fontFamily: fonts.bodySemi,
-    fontSize: 12,
-    letterSpacing: 1.4,
-    textTransform: 'uppercase',
-    color: colors.tealDeep,
+    fontSize: 13,
+    color: colors.muted,
+    textAlign: 'center',
   },
+  progressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'center',
+    width: 200,
+    marginTop: spacing.md,
+  },
+  progressDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: 'rgba(32,35,78,0.14)',
+  },
+  progressDotOn: { backgroundColor: colors.teal },
+  progressLine: { flex: 1, height: 2, backgroundColor: 'rgba(32,35,78,0.12)' },
+  progressLineOn: { backgroundColor: colors.teal },
+  body: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   title: {
     fontFamily: fonts.heading,
-    fontSize: 28,
+    fontSize: 24,
     color: colors.text,
-    marginTop: spacing.sm,
-    letterSpacing: -0.5,
-    lineHeight: 34,
+    textAlign: 'center',
+    letterSpacing: -0.4,
+    lineHeight: 31,
   },
-  hint: {
+  subtitle: {
     fontFamily: fonts.body,
     fontSize: 15,
     color: colors.muted,
-    marginTop: spacing.sm,
+    textAlign: 'center',
+    marginTop: spacing.md,
     lineHeight: 21,
+    paddingHorizontal: spacing.sm,
   },
-  hero: { alignItems: 'center', marginTop: spacing.xxl, marginBottom: spacing.xl },
-  heroLabel: {
-    fontFamily: fonts.bodySemi,
-    fontSize: 13,
-    color: colors.tealDeep,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  heroValue: {
+  value: {
     fontFamily: fonts.heading,
-    fontSize: 60,
-    color: colors.indigo,
-    letterSpacing: -2,
-    marginTop: 6,
+    fontSize: 46,
+    color: colors.teal,
+    letterSpacing: -1.5,
+    marginTop: spacing.xxl,
   },
+  sliderHint: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.muted,
+    marginTop: spacing.md,
+    marginBottom: spacing.xl,
+  },
+  sliderWrap: { alignSelf: 'stretch' },
   rangeRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
   rangeText: { fontFamily: fonts.body, fontSize: 12, color: colors.muted },
-  reward: {
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.xl,
-    padding: spacing.lg,
-    marginTop: spacing.xxl,
-    shadowColor: '#1A1D3A',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
-    elevation: 4,
-  },
-  rewardHead: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'center' },
-  rewardHeadText: {
-    fontFamily: fonts.bodySemi,
-    fontSize: 11,
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-    color: colors.navy,
-    backgroundColor: colors.tealLight,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: radii.pill,
-    overflow: 'hidden',
-  },
-  rewardStats: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.md },
-  rewardStat: { flex: 1, alignItems: 'center' },
-  rewardValue: { fontFamily: fonts.heading, fontSize: 24, color: colors.indigo },
-  rewardLabel: { fontFamily: fonts.body, fontSize: 12, color: colors.muted, marginTop: 2 },
-  rewardDivider: { width: 1, height: 30, backgroundColor: colors.border },
   footer: { paddingTop: spacing.md },
+  prevBtn: { alignSelf: 'center', paddingVertical: spacing.md, marginTop: spacing.xs },
+  prevText: { fontFamily: fonts.bodySemi, fontSize: 15, color: colors.tealDeep },
 });
