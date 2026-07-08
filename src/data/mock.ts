@@ -270,6 +270,71 @@ export const FINANCIAL_ACCOUNTS: FinancialAccount[] = [
   { id: 'vanguard', institution: 'Vanguard', name: 'Retirement (SEP-IRA)', kind: 'Retirement', balance: 96_750, connected: false },
 ];
 
+export type GoalState = 'On track' | 'In progress' | 'Behind';
+
+/**
+ * A holistic financial-plan snapshot for the Tracking tab, modeled on a
+ * one-page wealth-management review (values, goals, net worth, cash flow,
+ * allocation, tax, and action items). All mock content.
+ */
+export const FINANCIAL_PLAN = {
+  asOf: 'April 11, 2026',
+  values: ['Quality time with family', 'Financial freedom', 'Early retirement'],
+  goals: [
+    { label: 'Pay off mortgage in 8 years', status: 'On track' as GoalState },
+    { label: 'Save towards kids’ college', status: 'Behind' as GoalState },
+    { label: 'Fully funded emergency fund', status: 'In progress' as GoalState },
+    { label: 'Retire at 55 on $120,000/yr net', status: 'On track' as GoalState },
+  ],
+  netWorthHistory: [
+    { label: '06/23', value: 420_000 },
+    { label: '05/24', value: 452_000 },
+    { label: '06/25', value: 488_000 },
+    { label: '04/26', value: 510_000 },
+  ],
+  cashFlow: {
+    monthlyIncome: 12_000,
+    items: [
+      { label: 'Living', amount: 2_600 },
+      { label: 'Debt', amount: 2_000 },
+      { label: 'Saving', amount: 3_200 },
+      { label: 'Investing', amount: 3_200 },
+      { label: 'Giving', amount: 1_000 },
+    ],
+  },
+  assetAllocation: [
+    { label: 'Large Cap', value: 35, color: '#27B7CE' },
+    { label: 'International', value: 15, color: '#4F6BED' },
+    { label: 'Cash', value: 14, color: '#34C77B' },
+    { label: 'Fixed Income', value: 14, color: '#5FD3E3' },
+    { label: 'Small Cap', value: 10, color: '#F2884B' },
+    { label: 'Emerging Mkts', value: 6, color: '#8B5CF6' },
+    { label: 'Mid Cap', value: 6, color: '#A7E05A' },
+  ],
+  assetLocation: [
+    { label: 'Tax-Deferred', value: 62.7, color: '#4F6BED' },
+    { label: 'Tax-Free', value: 21.4, color: '#F2B544' },
+    { label: 'Taxable', value: 15.9, color: '#8B5CF6' },
+  ],
+  tax: {
+    grossIncome: 200_000,
+    fedBracket: '22%',
+    stateLabel: 'Illinois income tax',
+    statePct: '5%',
+    fica: '7.65%',
+    effectiveRate: '~23%',
+  },
+  actionsNow: [
+    'Establish automatic contributions to a Roth IRA',
+    'Open a 529 plan for the children',
+    'Reallocate investments based on the recommendation',
+  ],
+  actionsLater: [
+    'After the emergency fund is fully funded, rechannel excess savings toward the mortgage.',
+    'Once 2027 vacation plans are set, allocate the remainder to the emergency fund or extra mortgage payments.',
+  ],
+};
+
 /** Convenience helper for displaying a lead's full name. */
 export function fullName(lead: Pick<Lead, 'firstName' | 'lastName'>): string {
   return `${lead.firstName} ${lead.lastName}`;
