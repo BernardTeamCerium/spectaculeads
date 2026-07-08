@@ -1,4 +1,4 @@
-import { Advisor, CreditPackage, Lead } from '../types';
+import { Advisor, CreditPackage, FinancialAccount, Lead } from '../types';
 
 /**
  * Mock data for the Spectaculeads prototype.
@@ -237,6 +237,37 @@ export const SAMPLE_LEADS: Lead[] = [
     status: 'Available',
     date: hoursAgo(11),
   },
+];
+
+/**
+ * Commissions booked so far this year, one entry per elapsed month. Used by the
+ * Tracking tab to show how the advisor is trending against their income goal.
+ * (Mock series — the number of entries is treated as "months elapsed".)
+ */
+export const MONTHLY_CLOSED: { month: string; amount: number }[] = [
+  { month: 'Jan', amount: 20_000 },
+  { month: 'Feb', amount: 22_000 },
+  { month: 'Mar', amount: 18_000 },
+  { month: 'Apr', amount: 24_000 },
+  { month: 'May', amount: 22_000 },
+  { month: 'Jun', amount: 26_000 },
+];
+
+/** Recurring monthly personal obligations shown in the Tracking → personal plan. */
+export const PERSONAL_OBLIGATIONS: { id: string; label: string; amount: number; icon: string }[] = [
+  { id: 'mortgage', label: 'Mortgage', amount: 3_200, icon: 'home-outline' },
+  { id: 'auto', label: 'Auto & insurance', amount: 850, icon: 'car-outline' },
+  { id: 'living', label: 'Living expenses', amount: 2_400, icon: 'basket-outline' },
+  { id: 'savings', label: 'Savings & investing', amount: 1_500, icon: 'trending-up-outline' },
+];
+
+/** External accounts the advisor can (mock-)connect to monitor personal + business finances. */
+export const FINANCIAL_ACCOUNTS: FinancialAccount[] = [
+  { id: 'chase', institution: 'Chase', name: 'Business Checking', kind: 'Bank', balance: 48_250, connected: true },
+  { id: 'fidelity', institution: 'Fidelity', name: 'Brokerage', kind: 'Investments', balance: 182_400, connected: true },
+  { id: 'rocket', institution: 'Rocket Mortgage', name: 'Home Mortgage', kind: 'Mortgage', balance: -318_000, monthly: 3_200, connected: false },
+  { id: 'amex', institution: 'American Express', name: 'Business Card', kind: 'Credit', balance: -4_120, connected: false },
+  { id: 'vanguard', institution: 'Vanguard', name: 'Retirement (SEP-IRA)', kind: 'Retirement', balance: 96_750, connected: false },
 ];
 
 /** Convenience helper for displaying a lead's full name. */

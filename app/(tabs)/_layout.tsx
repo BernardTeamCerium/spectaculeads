@@ -38,19 +38,21 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="tracking"
+        options={{
+          title: 'Tracking',
+          tabBarIcon: ({ color, size }) => <Ionicons name="pulse-outline" color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
         name="leads"
         options={{
           title: 'Leads',
           tabBarIcon: ({ color, size }) => <Ionicons name="people-outline" color={color} size={size} />,
         }}
       />
-      <Tabs.Screen
-        name="buy"
-        options={{
-          title: 'Buy',
-          tabBarIcon: ({ color, size }) => <Ionicons name="cart-outline" color={color} size={size} />,
-        }}
-      />
+      {/* Buy stays reachable (Home/Plan/Results CTAs) but not as its own tab. */}
+      <Tabs.Screen name="buy" options={{ href: null }} />
       <Tabs.Screen
         name="profile"
         options={{

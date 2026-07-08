@@ -67,6 +67,20 @@ export interface CreditPackage {
   highlight?: boolean; // dark, emphasized card treatment
 }
 
+/** Type of external financial account the advisor can link for tracking. */
+export type AccountKind = 'Bank' | 'Investments' | 'Mortgage' | 'Credit' | 'Retirement';
+
+/** An external financial account shown in the Tracking → connections list. */
+export interface FinancialAccount {
+  id: string;
+  institution: string; // e.g. "Chase"
+  name: string; // e.g. "Business Checking"
+  kind: AccountKind;
+  balance: number; // current balance; negative = a liability owed
+  monthly?: number; // recurring monthly payment (e.g. a mortgage)
+  connected: boolean;
+}
+
 /** A completed (mock) credit purchase, recorded in live state. */
 export interface Transaction {
   id: string;

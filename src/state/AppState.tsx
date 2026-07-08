@@ -1,7 +1,23 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
-import { DEMO_ADVISOR, generateLeads, LEADS_PER_PURCHASE, packageTotal, SAMPLE_LEADS } from '../data/mock';
+import {
+  DEMO_ADVISOR,
+  FINANCIAL_ACCOUNTS,
+  generateLeads,
+  LEADS_PER_PURCHASE,
+  packageTotal,
+  SAMPLE_LEADS,
+} from '../data/mock';
 import { computePlan, DEFAULT_PLAN_INPUTS } from '../lib/incomePlan';
-import { CreditPackage, Lead, LeadStatus, License, PlanInputs, PlanResults, Transaction } from '../types';
+import {
+  CreditPackage,
+  FinancialAccount,
+  Lead,
+  LeadStatus,
+  License,
+  PlanInputs,
+  PlanResults,
+  Transaction,
+} from '../types';
 
 export type { LicenseStatus } from '../types';
 export { computePlan } from '../lib/incomePlan';
@@ -58,6 +74,10 @@ interface AppStateShape {
   submitLicense: (input: { state: string; type: string; fileName: string }) => void;
   verifyLicense: (id: string) => void;
 
+  // financial accounts (Tracking tab)
+  financialAccounts: FinancialAccount[];
+  toggleAccountConnection: (id: string) => void;
+
   // demo
   resetDemo: () => void;
 }
@@ -82,6 +102,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [planInputs, setPlanInputsState] = useState<PlanInputs>(DEFAULT_PLAN_INPUTS);
   const [planComplete, setPlanComplete] = useState(false);
   const [licenses, setLicenses] = useState<License[]>(seedLicenses);
+  const [financialAccounts, setFinancialAccounts] = useState<FinancialAccount[]>(FINANCIAL_ACCOUNTS);
   const [user, setUser] = useState<UserProfile>({
     name: DEMO_ADVISOR.name,
     email: DEMO_ADVISOR.email,
@@ -187,6 +208,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     );
   }, []);
 
+  const toggleAccountConnection = useCallback((id: string) => {
+    setFinancialAccounts((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, connected: !a.connected } : a))
+    );
+  }, []);
+
   /** Restore the whole demo to its starting state (for repeatable walkthroughs). */
   const resetDemo = useCallback(() => {
     setCredits(DEMO_ADVISOR.credits);
@@ -195,6 +222,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     setPlanInputsState(DEFAULT_PLAN_INPUTS);
     setPlanComplete(false);
     setLicenses(seedLicenses());
+    setFinancialAccounts(FINANCIAL_ACCOUNTS);
   }, []);
 
   const planResults = useMemo(() => computePlan(planInputs), [planInputs]);
@@ -223,6 +251,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       licenses,
       submitLicense,
       verifyLicense,
+      financialAccounts,
+      toggleAccountConnection,
       resetDemo,
     }),
     [
@@ -247,6 +277,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       licenses,
       submitLicense,
       verifyLicense,
+      financialAccounts,
+      toggleAccountConnection,
       resetDemo,
     ]
   );
