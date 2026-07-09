@@ -97,5 +97,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bodySemi,
     fontSize: 16,
     letterSpacing: 0.2,
+    textTransform: 'capitalize',
   },
 });

@@ -13,13 +13,14 @@ export default function TabsLayout() {
         tabBarStyle: {
           backgroundColor: colors.white,
           borderTopColor: colors.border,
-          height: Platform.OS === 'ios' ? 88 : 64,
-          paddingTop: 6,
-          paddingBottom: Platform.OS === 'ios' ? 28 : 8,
+          height: Platform.OS === 'ios' ? 90 : 70,
+          paddingTop: 8,
+          paddingBottom: Platform.OS === 'ios' ? 30 : 12,
         },
         tabBarLabelStyle: {
           fontFamily: fonts.bodyMedium,
-          fontSize: 11,
+          fontSize: 10.5,
+          lineHeight: 14,
         },
       }}
     >

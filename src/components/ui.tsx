@@ -145,6 +145,7 @@ const styles = StyleSheet.create({
     lineHeight: 34,
     color: colors.text,
     letterSpacing: -0.5,
+    textTransform: 'capitalize',
   },
   h2: {
     fontFamily: fonts.headingSemi,
@@ -152,6 +153,7 @@ const styles = StyleSheet.create({
     lineHeight: 26,
     color: colors.text,
     letterSpacing: -0.3,
+    textTransform: 'capitalize',
   },
   body: {
     fontFamily: fonts.body,
