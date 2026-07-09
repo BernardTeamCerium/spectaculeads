@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Body, Card, H1, H2, Screen, StatusBadge } from '../../src/components';
 import { fullName, initials } from '../../src/data/mock';
+import { leadsPerMonth } from '../../src/lib/incomePlan';
 import { useApp } from '../../src/state/AppState';
 import { LeadStatus } from '../../src/types';
 import { colors, fonts, radii, spacing } from '../../src/theme';
@@ -145,10 +146,12 @@ export default function Home() {
       ))}
 
       <Pressable onPress={() => router.push('/(tabs)/buy')} style={styles.buyBanner}>
-        <Ionicons name="cart" size={20} color={colors.teal} />
+        <Ionicons name="rocket" size={20} color={colors.teal} />
         <View style={{ flex: 1 }}>
-          <Text style={styles.buyTitle}>Need more leads?</Text>
-          <Body muted style={{ fontSize: 13 }}>Top up your credits to grow the pipeline.</Body>
+          <Text style={styles.buyTitle}>Hit your goal faster</Text>
+          <Body muted style={{ fontSize: 13 }}>
+            Your plan needs ~{leadsPerMonth(planResults.leadsNeeded)} leads/month. Top up to stay on pace.
+          </Body>
         </View>
         <Ionicons name="chevron-forward" size={18} color={colors.muted} />
       </Pressable>

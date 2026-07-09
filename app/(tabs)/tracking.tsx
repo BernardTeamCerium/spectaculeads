@@ -1,13 +1,18 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import { Body, Card, Eyebrow, H1, H2, Screen } from '../../src/components';
+import { Body, Button, Card, Eyebrow, H1, H2, Screen } from '../../src/components';
 import { DonutChart, LineChart, PieChart } from '../../src/components/charts';
-import { FINANCIAL_PLAN, GoalState, MONTHLY_CLOSED } from '../../src/data/mock';
-import { computeGoalTrend, netWorth } from '../../src/lib/financials';
+import { CREDIT_PACKAGES, FINANCIAL_PLAN, GoalState, MONTHLY_CLOSED } from '../../src/data/mock';
+import { computeGoalTrend, netWorth, projectOutlook } from '../../src/lib/financials';
+import { leadsPerMonth, monthlyLeadCost, recommendPackage } from '../../src/lib/incomePlan';
 import { useApp } from '../../src/state/AppState';
 import { AccountKind } from '../../src/types';
 import { colors, fonts, radii, spacing } from '../../src/theme';
 import { money } from '../../src/utils/format';
+
+const HORIZONS = [3, 5, 10] as const;
 
 const KIND_ICON: Record<AccountKind, keyof typeof Ionicons.glyphMap> = {
   Bank: 'card-outline',
@@ -28,10 +33,12 @@ function signedMoney(n: number): string {
 }
 
 export default function Tracking() {
-  const { planInputs, financialAccounts, toggleAccountConnection } = useApp();
+  const { planInputs, planResults, financialAccounts, toggleAccountConnection } = useApp();
+  const router = useRouter();
   const { width: winW } = useWindowDimensions();
   const chartW = Math.min(winW - 64, 520);
   const plan = FINANCIAL_PLAN;
+  const [horizon, setHorizon] = useState<(typeof HORIZONS)[number]>(5);
 
   // Income-goal pace (business side, from booked commissions).
   const annualGoal = planInputs.netIncomeGoal;
@@ -39,6 +46,23 @@ export default function Tracking() {
   const ytdClosed = MONTHLY_CLOSED.reduce((s, m) => s + m.amount, 0);
   const trend = computeGoalTrend(annualGoal, ytdClosed, monthsElapsed);
   const aheadBy = ytdClosed - trend.expectedByNow;
+
+  // Long-term outlook (macro view): how this year's goal compounds over time.
+  const startNetWorth = plan.netWorthHistory[plan.netWorthHistory.length - 1].value;
+  const monthlySavings = plan.cashFlow.items
+    .filter((i) => i.label === 'Saving' || i.label === 'Investing')
+    .reduce((s, i) => s + i.amount, 0);
+  const outlook = projectOutlook({
+    annualGoal,
+    startNetWorth,
+    annualSavings: monthlySavings * 12,
+    years: horizon,
+  });
+
+  // Lead plan: the purchase that keeps the pipeline on pace for the goal.
+  const leadsMo = leadsPerMonth(planResults.leadsNeeded);
+  const recPkg = recommendPackage(planResults.leadsNeeded, CREDIT_PACKAGES);
+  const recCost = monthlyLeadCost(planResults.leadsNeeded, recPkg);
 
   // Cash flow
   const cf = plan.cashFlow;
@@ -94,6 +118,73 @@ export default function Tracking() {
             <Text style={styles.heroStatLabel}>vs pace</Text>
           </View>
         </View>
+      </View>
+
+      {/* Long-term outlook (macro) */}
+      <H2 style={styles.sectionHead}>Long-term outlook</H2>
+      <Body muted style={styles.connIntro}>
+        The macro view — how hitting this year’s goal compounds over 3, 5, and 10 years.
+      </Body>
+      <Card>
+        <View style={styles.horizonRow}>
+          {HORIZONS.map((y) => (
+            <Pressable
+              key={y}
+              onPress={() => setHorizon(y)}
+              style={[styles.horizonPill, horizon === y && styles.horizonPillOn]}
+            >
+              <Text style={[styles.horizonText, horizon === y && styles.horizonTextOn]}>{y} yr</Text>
+            </Pressable>
+          ))}
+        </View>
+        <Text style={styles.outlookLabel}>Projected net worth in {horizon} years</Text>
+        <Text style={styles.outlookValue}>{money(outlook.projectedNetWorth)}</Text>
+        <View style={styles.outlookStats}>
+          <View style={styles.outlookStat}>
+            <Text style={styles.outlookStatV}>{money(outlook.incomeTarget)}</Text>
+            <Text style={styles.outlookStatL}>income target · yr {horizon}</Text>
+          </View>
+          <View style={styles.outlookStat}>
+            <Text style={styles.outlookStatV}>{money(outlook.cumulativeIncome)}</Text>
+            <Text style={styles.outlookStatL}>cumulative income</Text>
+          </View>
+        </View>
+        <Text style={styles.caption}>Assumes ~5% annual income growth and 6% investment returns.</Text>
+      </Card>
+
+      {/* Lead plan — the app's push to influence income */}
+      <View style={styles.leadCard}>
+        <View style={styles.leadHead}>
+          <Ionicons name="rocket" size={15} color={colors.tealDeep} />
+          <Text style={styles.leadEyebrow}>Reach your goal faster</Text>
+        </View>
+        <Text style={styles.leadTitle}>Add about {leadsMo} leads a month</Text>
+        <Text style={styles.leadBody}>
+          Your {money(annualGoal)} goal needs roughly {leadsMo} leads/month. {recPkg.name} delivers them for
+          ~{money(recCost)}/mo — enough pipeline to book {money(planResults.projectedIncome)} in commissions.
+        </Text>
+        <View style={styles.leadStats}>
+          <View style={styles.leadStat}>
+            <Text style={styles.leadStatV}>{leadsMo}</Text>
+            <Text style={styles.leadStatL}>leads/mo</Text>
+          </View>
+          <View style={styles.leadStatDiv} />
+          <View style={styles.leadStat}>
+            <Text style={styles.leadStatV}>{money(recPkg.pricePerLead)}</Text>
+            <Text style={styles.leadStatL}>per lead</Text>
+          </View>
+          <View style={styles.leadStatDiv} />
+          <View style={styles.leadStat}>
+            <Text style={styles.leadStatV}>{money(recCost)}</Text>
+            <Text style={styles.leadStatL}>per month</Text>
+          </View>
+        </View>
+        <Button
+          label={`Buy ${recPkg.name}`}
+          variant="teal"
+          onPress={() => router.push(`/checkout?pkg=${recPkg.id}`)}
+          style={{ marginTop: spacing.lg }}
+        />
       </View>
 
       {/* Values */}
@@ -297,6 +388,36 @@ const styles = StyleSheet.create({
 
   sectionHead: { marginTop: spacing.sm, marginBottom: spacing.md },
   caption: { fontFamily: fonts.body, fontSize: 12, color: colors.muted, marginTop: spacing.sm, textAlign: 'center' },
+
+  horizonRow: { flexDirection: 'row', backgroundColor: 'rgba(32,35,78,0.05)', borderRadius: radii.pill, padding: 4, marginBottom: spacing.lg },
+  horizonPill: { flex: 1, paddingVertical: 8, borderRadius: radii.pill, alignItems: 'center' },
+  horizonPillOn: { backgroundColor: colors.indigo },
+  horizonText: { fontFamily: fonts.bodySemi, fontSize: 13, color: colors.muted },
+  horizonTextOn: { color: colors.white },
+  outlookLabel: { fontFamily: fonts.body, fontSize: 13, color: colors.muted },
+  outlookValue: { fontFamily: fonts.heading, fontSize: 32, color: colors.indigo, letterSpacing: -1, marginTop: 4 },
+  outlookStats: { flexDirection: 'row', marginTop: spacing.lg, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: spacing.md },
+  outlookStat: { flex: 1 },
+  outlookStatV: { fontFamily: fonts.headingSemi, fontSize: 16, color: colors.text },
+  outlookStatL: { fontFamily: fonts.body, fontSize: 12, color: colors.muted, marginTop: 2 },
+
+  leadCard: {
+    backgroundColor: 'rgba(39,183,206,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(39,183,206,0.35)',
+    borderRadius: radii.xl,
+    padding: spacing.xl,
+    marginTop: spacing.xl,
+  },
+  leadHead: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  leadEyebrow: { fontFamily: fonts.bodySemi, fontSize: 12, letterSpacing: 1, textTransform: 'uppercase', color: colors.tealDeep },
+  leadTitle: { fontFamily: fonts.heading, fontSize: 22, color: colors.indigo, marginTop: spacing.sm, letterSpacing: -0.4 },
+  leadBody: { fontFamily: fonts.body, fontSize: 14, color: colors.text, marginTop: spacing.sm, lineHeight: 20 },
+  leadStats: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.lg },
+  leadStat: { flex: 1, alignItems: 'center' },
+  leadStatV: { fontFamily: fonts.heading, fontSize: 20, color: colors.indigo },
+  leadStatL: { fontFamily: fonts.body, fontSize: 12, color: colors.muted, marginTop: 2 },
+  leadStatDiv: { width: 1, height: 28, backgroundColor: 'rgba(32,35,78,0.12)' },
 
   valueRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: 7 },
   valueText: { fontFamily: fonts.bodyMedium, fontSize: 15, color: colors.text },

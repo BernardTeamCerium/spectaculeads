@@ -42,3 +42,50 @@ export function computeGoalTrend(
 export function netWorth(accounts: { balance: number; connected: boolean }[]): number {
   return accounts.filter((a) => a.connected).reduce((sum, a) => sum + a.balance, 0);
 }
+
+export interface Outlook {
+  /** Income goal in the final year of the horizon (grown from the annual goal). */
+  incomeTarget: number;
+  /** Total income earned across the horizon. */
+  cumulativeIncome: number;
+  /** Projected net worth at the end of the horizon. */
+  projectedNetWorth: number;
+}
+
+/**
+ * Project the annual income goal out over a multi-year horizon (3 / 5 / 10 yr)
+ * — the "macro" view. The goal (and yearly savings) grow at `incomeGrowth`,
+ * and net worth compounds at `returnRate` while savings are added each year.
+ */
+export function projectOutlook(params: {
+  annualGoal: number;
+  startNetWorth: number;
+  annualSavings: number;
+  years: number;
+  incomeGrowth?: number;
+  returnRate?: number;
+}): Outlook {
+  const { annualGoal, startNetWorth, annualSavings, years } = params;
+  const incomeGrowth = params.incomeGrowth ?? 0.05;
+  const returnRate = params.returnRate ?? 0.06;
+
+  let nw = startNetWorth;
+  let income = annualGoal;
+  let savings = annualSavings;
+  let cumulative = 0;
+  let lastIncome = annualGoal;
+
+  for (let y = 1; y <= Math.max(0, years); y++) {
+    lastIncome = income;
+    cumulative += income;
+    nw = nw * (1 + returnRate) + savings;
+    income *= 1 + incomeGrowth;
+    savings *= 1 + incomeGrowth;
+  }
+
+  return {
+    incomeTarget: Math.round(lastIncome),
+    cumulativeIncome: Math.round(cumulative),
+    projectedNetWorth: Math.round(nw),
+  };
+}
