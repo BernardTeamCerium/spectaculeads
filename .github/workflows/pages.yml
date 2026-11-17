@@ -1,0 +1,64 @@
+name: Deploy to GitHub Pages
+
+# Builds the Expo web export and publishes it to the gh-pages branch so the
+# app is viewable at https://<owner>.github.io/spectaculeads/ — no secrets
+# required (uses the built-in GITHUB_TOKEN).
+#
+# ONE-TIME SETUP (after this runs once and creates the gh-pages branch):
+#   Repo → Settings → Pages → Build and deployment →
+#     Source: "Deploy from a branch" → Branch: gh-pages, folder: / (root) → Save
+# Then every push redeploys automatically.
+
+on:
+  push:
+    branches:
+      - main
+      - claude/gracious-curie-635q5h
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pages:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Project Pages serve under /<repo>/, so build assets against that base
+      # path. Done here (not committed) so the Netlify root build is unaffected.
+      - name: Set base path for project Pages
+        run: node -e "const fs=require('fs');const j=JSON.parse(fs.readFileSync('app.json','utf8'));j.expo.experiments={...(j.expo.experiments||{}),baseUrl:'/spectaculeads'};fs.writeFileSync('app.json',JSON.stringify(j,null,2));"
+
+      - name: Build web export
+        run: npx expo export --platform web
+
+      - name: Prepare static site (SPA fallback + disable Jekyll)
+        run: |
+          cp dist/index.html dist/404.html
+          touch dist/.nojekyll
+
+      - name: Publish to gh-pages
+        run: |
+          cd dist
+          git init -q
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Deploy ${{ github.sha }}"
+          git branch -M gh-pages
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
