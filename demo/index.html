@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spectaculeads - Auto-play demo</title>
+<meta name="theme-color" content="#191C3B">
+<meta name="description" content="A hands-free walkthrough of the Spectaculeads advisor app.">
+<style>
+  :root{
+    --navy:#191C3B; --navy2:#0F1130; --indigo:#20234E; --teal:#27B7CE; --tealLight:#5FD3E3;
+    --ink:#EAEDF3; --muted:#9AA0BF; --line:rgba(255,255,255,.10);
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0; background:#0F1130;}
+  .wrap{
+    min-height:100vh; padding:30px 20px 34px;
+    background:radial-gradient(120% 90% at 50% -10%, #232750 0%, var(--navy) 45%, var(--navy2) 100%);
+    color:var(--ink); font-family:var(--sans);
+    display:flex; flex-direction:column; align-items:center; gap:22px;
+  }
+  header{text-align:center; display:flex; flex-direction:column; gap:6px;}
+  .brand{font-size:13px; letter-spacing:.22em; text-transform:uppercase; color:var(--tealLight); font-weight:700;}
+  .tag{font-size:24px; font-weight:700; letter-spacing:-.01em; text-wrap:balance;}
+  .sub{font-size:14px; color:var(--muted);}
+  .stage{display:flex; justify-content:center; width:100%;}
+  .phone{
+    position:relative; width:min(300px,78vw); aspect-ratio:390/844;
+    border-radius:44px; padding:10px; background:linear-gradient(160deg,#2a2e58,#0d0f28);
+    box-shadow:0 30px 70px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.06);
+  }
+  .screen{position:relative; width:100%; height:100%; border-radius:34px; overflow:hidden; background:var(--indigo);}
+  .screen img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity .4s ease;}
+  .screen img.on{opacity:1;}
+  .segments{display:flex; gap:6px; width:min(300px,78vw);}
+  .seg{flex:1; height:4px; border-radius:999px; background:rgba(255,255,255,.16); overflow:hidden; cursor:pointer;}
+  .seg .fill{display:block; height:100%; width:0; background:var(--teal); border-radius:999px;}
+  .caption{width:min(300px,78vw); text-align:center; min-height:74px; display:flex; flex-direction:column; gap:4px;}
+  .cap-idx{font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--teal); font-weight:700; font-variant-numeric:tabular-nums;}
+  .cap-title{font-size:19px; font-weight:700; letter-spacing:-.01em;}
+  .cap-body{font-size:14px; line-height:1.45; color:var(--muted); text-wrap:balance;}
+  .controls{display:flex; align-items:center; gap:12px;}
+  .controls button{
+    font-family:var(--sans); color:var(--ink); background:rgba(255,255,255,.06);
+    border:1px solid var(--line); border-radius:999px; cursor:pointer;
+    height:44px; display:flex; align-items:center; justify-content:center; transition:transform .1s ease, background .15s ease;
+  }
+  .controls button:hover{background:rgba(255,255,255,.12);}
+  .controls button:active{transform:scale(.96);}
+  .controls .nav{width:44px; font-size:20px;}
+  .controls .play{padding:0 22px; font-size:15px; font-weight:700; color:var(--navy); background:var(--teal); border:none;}
+  .controls button:focus-visible{outline:2px solid var(--tealLight); outline-offset:2px;}
+  .hint{font-size:12px; color:var(--muted);}
+  @media (prefers-reduced-motion: reduce){ .screen img{transition:none;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">Spectaculeads</div>
+    <div class="tag">Auto-play demo</div>
+    <div class="sub">A hands-free walkthrough of the advisor flow</div>
+  </header>
+  <div class="stage">
+    <div class="phone"><div class="screen"><img id="imgA" alt=""><img id="imgB" alt=""></div></div>
+  </div>
+  <div class="segments" id="segs"></div>
+  <div class="caption">
+    <div class="cap-idx" id="capIdx"></div>
+    <div class="cap-title" id="capTitle"></div>
+    <div class="cap-body" id="capBody"></div>
+  </div>
+  <div class="controls">
+    <button class="nav" id="prev" aria-label="Previous step">&#8249;</button>
+    <button class="play" id="play" aria-label="Play or pause">Pause</button>
+    <button class="nav" id="next" aria-label="Next step">&#8250;</button>
+  </div>
+  <div class="hint">Loops automatically &middot; tap a segment to jump</div>
+</div>
+<script>
+  const FRAMES=[
+    {src:'frames/ap_0.png',title:'Income by Design',body:'Set a target net income - the app maps the deals & leads to reach it.'},
+    {src:'frames/ap_1.png',title:'Your targets',body:'Your goal becomes deals, appointments, and leads, plus a recommended pack.'},
+    {src:'frames/ap_2.png',title:'Your plan',body:'Break the goal down by year, quarter, or month with conversion goals.'},
+    {src:'frames/ap_3.png',title:'Buy leads',body:'Pick a credit package - Pro is the best value.'},
+    {src:'frames/ap_4.png',title:'Demo purchase',body:'Card pre-filled - tap Pay. Credits added and fresh leads drop into the inbox.'},
+    {src:'frames/ap_5.png',title:'Work your inbox',body:'New leads land here - update status (Available to Appointment Set) and add notes.'}
+  ];
+  const DWELL=3400;
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const segs=document.getElementById('segs');
+  const imgs=[document.getElementById('imgA'),document.getElementById('imgB')];
+  const playBtn=document.getElementById('play');
+  let cur=0, layer=0, playing=!reduce, timer=null;
+  FRAMES.forEach((_,i)=>{const s=document.createElement('div');s.className='seg';s.innerHTML='<span class="fill"></span>';s.addEventListener('click',()=>go(i));segs.appendChild(s);});
+  const fills=[...segs.querySelectorAll('.fill')];
+  function paint(){
+    document.getElementById('capIdx').textContent=(cur+1)+' / '+FRAMES.length;
+    document.getElementById('capTitle').textContent=FRAMES[cur].title;
+    document.getElementById('capBody').textContent=FRAMES[cur].body;
+    fills.forEach((f,i)=>{f.style.transition='none';f.style.width=i<cur?'100%':'0';});
+    if(playing){requestAnimationFrame(()=>{const f=fills[cur];f.style.transition='width '+DWELL+'ms linear';f.style.width='100%';});}
+  }
+  function show(i){const next=imgs[1-layer];next.src=FRAMES[i].src;next.classList.add('on');imgs[layer].classList.remove('on');layer=1-layer;}
+  function schedule(){clearTimeout(timer);if(playing)timer=setTimeout(()=>go(cur+1),DWELL);}
+  function go(i){cur=(i+FRAMES.length)%FRAMES.length;show(cur);paint();schedule();}
+  function setPlaying(p){playing=p;playBtn.textContent=p?'Pause':'Play';if(p){paint();schedule();}else{clearTimeout(timer);fills.forEach((f,i)=>{f.style.transition='none';f.style.width=i<=cur?'100%':'0';});}}
+  document.getElementById('prev').addEventListener('click',()=>go(cur-1));
+  document.getElementById('next').addEventListener('click',()=>go(cur+1));
+  playBtn.addEventListener('click',()=>setPlaying(!playing));
+  // init
+  imgs[0].src=FRAMES[0].src; imgs[0].classList.add('on'); paint(); playBtn.textContent=playing?'Pause':'Play'; if(playing) schedule();
+</script>
+</body>
+</html>

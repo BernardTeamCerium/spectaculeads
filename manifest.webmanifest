@@ -1,0 +1,16 @@
+{
+  "name": "Spectaculeads",
+  "short_name": "Spectaculeads",
+  "description": "Your income goal, delivered. Lead generation for financial advisors (prototype).",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#191C3B",
+  "theme_color": "#191C3B",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
